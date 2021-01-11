@@ -9,6 +9,20 @@ export interface OAuthProviderOption {
   isEnabled: boolean;
 }
 
+export interface LdapProviderOption {
+  provider: string;
+  displayName: string;
+  ldapDomain: string;
+  ldapPort: string;
+  bindUsername: string;
+  bindPassword: string;
+  rootDN: string;
+  scope: string;
+  userSearchFilter: string;
+  usernameLdapAttribute: string;
+  isEnabled: boolean;
+}
+
 export interface SystemSettings {
   mode: string;
   buildTime: string;
@@ -22,6 +36,7 @@ export interface SystemSettings {
   tenantAssetsURL: string;
   globalAssetsURL: string;
   oauth: OAuthProviderOption[];
+  ldap: LdapProviderOption[];
 }
 
 export interface UserSettings {
@@ -31,7 +46,7 @@ export interface UserSettings {
 export const OAuthConfigStatus = {
   Disabled: 1,
   Enabled: 2
-};
+}
 
 export interface OAuthConfig {
   provider: string;
@@ -47,6 +62,25 @@ export interface OAuthConfig {
   jsonUserIDPath: string;
   jsonUserNamePath: string;
   jsonUserEmailPath: string;
+}
+
+export const LdapConfigStatus = {
+  Disabled: 1,
+  Enabled: 2
+}
+
+export interface LdapConfig {
+  provider: string;
+  displayName: string;
+  status: number;
+  ldapDomain: string;
+  ldapPort: string;
+  bindUsername: string;
+  bindPassword: string;
+  rootDN: string;
+  scope: string;
+  userSearchFilter: string;
+  usernameLdapAttribute: string;
 }
 
 export interface ImageUpload {

@@ -1,5 +1,5 @@
 import { http, Result } from "@fider/services/http";
-import { UserRole, OAuthConfig, ImageUpload } from "@fider/models";
+import { UserRole, OAuthConfig, ImageUpload, LdapConfig } from "@fider/models";
 
 export interface CheckAvailabilityResponse {
   message: string;
@@ -75,6 +75,8 @@ export const unblockUser = async (userID: number): Promise<Result> => {
   return await http.delete(`/_api/admin/users/${userID}/block`);
 };
 
+/* OAUTH */
+
 export const getOAuthConfig = async (provider: string): Promise<Result<OAuthConfig>> => {
   return await http.get<OAuthConfig>(`/_api/admin/oauth/${provider}`);
 };
@@ -97,4 +99,28 @@ export interface CreateEditOAuthConfigRequest {
 
 export const saveOAuthConfig = async (request: CreateEditOAuthConfigRequest): Promise<Result> => {
   return await http.post("/_api/admin/oauth", request);
+};
+
+/* LDAP */
+
+export const getLdapConfig = async (provider: string): Promise<Result<LdapConfig>> => {
+  return await http.get<LdapConfig>(`/_api/admin/ldap/${provider}`);
+};
+
+export interface CreateEditLdapConfigRequest {
+  provider: string;
+  displayName: string;
+  status: number;
+  ldapDomain: string;
+  ldapPort: string;
+  bindUsername: string;
+  bindPassword: string;
+  rootDN: string;
+  scope: string;
+  userSearchFilter: string;
+  usernameLdapAttribute: string;
+}
+
+export const saveLdapConfig = async (request: CreateEditLdapConfigRequest): Promise<Result> => {
+  return await http.post("/_api/admin/ldap", request);
 };

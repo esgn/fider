@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	//"fmt"
 	"github.com/getfider/fider/app/actions"
 	"github.com/getfider/fider/app/models/cmd"
 	"github.com/getfider/fider/app/models/query"
@@ -109,8 +110,9 @@ func ManageMembers() web.HandlerFunc {
 // ManageAuthentication is the page used by administrators to change site authentication settings
 func ManageAuthentication() web.HandlerFunc {
 	return func(c *web.Context) error {
-		listProviders := &query.ListAllOAuthProviders{}
-		if err := bus.Dispatch(c, listProviders); err != nil {
+		listOauthProviders := &query.ListAllOAuthProviders{}
+		listLdapProviders := &query.ListAllLdapProviders{}
+		if err := bus.Dispatch(c, listOauthProviders, listLdapProviders); err != nil {
 			return c.Failure(err)
 		}
 
@@ -118,9 +120,11 @@ func ManageAuthentication() web.HandlerFunc {
 			Title:     "Authentication · Site Settings",
 			ChunkName: "ManageAuthentication.page",
 			Data: web.Map{
-				"providers": listProviders.Result,
+				"oauthProviders": listOauthProviders.Result,
+				"ldapProviders": listLdapProviders.Result,
 			},
 		})
+
 	}
 }
 
@@ -158,6 +162,37 @@ func SaveOAuthConfig() web.HandlerFunc {
 			return c.Failure(err)
 		}
 
+		return c.Ok(web.Map{})
+	}
+}
+
+// GetLdapConfig returns Ldap config based on given provider
+func GetLdapConfig() web.HandlerFunc {
+	return func(c *web.Context) error {
+		getConfig := &query.GetCustomLdapConfigByProvider{
+			Provider: c.Param("provider"),
+		}
+		if err := bus.Dispatch(c, getConfig); err != nil {
+			return c.Failure(err)
+		}
+		return c.Ok(getConfig.Result)
+	}
+}
+
+// SaveLdapConfig is used to create/edit Ldap configurations
+func SaveLdapConfig() web.HandlerFunc {
+	return func(c *web.Context) error {
+		input := new(actions.CreateEditLdapConfig)
+		if result := c.BindTo(input); !result.Ok {
+			return c.HandleValidation(result)
+		}
+		if err := bus.Dispatch(c,
+			&cmd.SaveCustomLdapConfig{
+				Config: input.Model,
+			},
+		); err != nil {
+			return c.Failure(err)
+		}
 		return c.Ok(web.Map{})
 	}
 }

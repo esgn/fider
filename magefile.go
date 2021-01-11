@@ -22,11 +22,11 @@ To learn how, visit our contributors guide: https://github.com/getfider/fider/bl
 var requiredDeps = []string{
 	"air",
 	"godotenv",
-	"docker",
-	"npm",
-	"node",
+//	"docker",
+//	"npm",
+//	"node",
 	"mage",
-	"golangci-lint",
+//	"golangci-lint",
 }
 var buildTime = time.Now().Format("2006.01.02.150405")
 var buildNumber = os.Getenv("CIRCLE_BUILD_NUM")

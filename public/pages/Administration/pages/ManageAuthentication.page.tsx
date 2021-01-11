@@ -1,8 +1,9 @@
 import React from "react";
 
 import { Segment, List, ListItem, Button, Heading, OAuthProviderLogo } from "@fider/components";
-import { OAuthConfig, OAuthProviderOption } from "@fider/models";
+import { OAuthConfig, OAuthProviderOption, LdapConfig, LdapProviderOption } from "@fider/models";
 import { OAuthForm } from "../components/OAuthForm";
+import { LdapForm } from "../components/LdapForm";
 import { actions, notify, Fider } from "@fider/services";
 import { FaEdit, FaPlay, FaSignInAlt } from "react-icons/fa";
 import { AdminBasePage } from "../components/AdminBasePage";
@@ -10,12 +11,15 @@ import { AdminBasePage } from "../components/AdminBasePage";
 import "./ManageAuthentication.page.scss";
 
 interface ManageAuthenticationPageProps {
-  providers: OAuthProviderOption[];
+  oauthProviders: OAuthProviderOption[];
+  ldapProviders: LdapProviderOption[];
 }
 
 interface ManageAuthenticationPageState {
-  isAdding: boolean;
-  editing?: OAuthConfig;
+  isAddingOauth: boolean;
+  editingOauth?: OAuthConfig;
+  isAddingLdap: boolean;
+  editingLdap?: LdapConfig;
 }
 
 export default class ManageAuthenticationPage extends AdminBasePage<
@@ -31,39 +35,78 @@ export default class ManageAuthenticationPage extends AdminBasePage<
   constructor(props: ManageAuthenticationPageProps) {
     super(props);
     this.state = {
-      isAdding: false
+      isAddingOauth: false,
+      isAddingLdap: false
     };
   }
 
-  private addNew = async () => {
-    this.setState({ isAdding: true, editing: undefined });
+  /* OAUTH PART */
+
+  private addNewOauth = async () => {
+    this.setState({ isAddingOauth: true, editingOauth: undefined });
   };
 
-  private edit = async (provider: string) => {
+  private editOauth = async (provider: string) => {
     const result = await actions.getOAuthConfig(provider);
     if (result.ok) {
-      this.setState({ editing: result.data, isAdding: false });
+      this.setState({ editingOauth: result.data, isAddingOauth: false });
     } else {
       notify.error("Failed to retrieve OAuth configuration. Try again later");
     }
   };
 
-  private startTest = async (provider: string) => {
+  private startOauthTest = async (provider: string) => {
     const redirect = `${Fider.settings.baseURL}/oauth/${provider}/echo`;
     window.open(`/oauth/${provider}?redirect=${redirect}`, "oauth-test", "width=1100,height=600,status=no,menubar=no");
   };
 
-  private cancel = async () => {
-    this.setState({ isAdding: false, editing: undefined });
+  private cancelOauth = async () => {
+    this.setState({ isAddingOauth: false, editingOauth: undefined });
   };
 
+  /* LDAP PART */
+
+  private addNewLdap = async () => {
+    this.setState({ isAddingLdap: true, editingLdap: undefined });
+  };
+
+  private editLdap = async (provider: string) => {
+    const result = await actions.getLdapConfig(provider);
+    if (result.ok) {
+      this.setState({ editingLdap: result.data, isAddingLdap: false });
+    } else {
+      notify.error("Failed to retrieve OAuth configuration. Try again later");
+    }
+  };
+
+  /*private startLdapTest = async (provider: string) => {
+    const redirect = `${Fider.settings.baseURL}/ldap/${provider}/echo`;
+    window.open(`/ldap/${provider}?redirect=${redirect}`, "oauth-test", "width=1100,height=600,status=no,menubar=no");
+  };*/
+
+  private cancelLdap = async () => {
+    this.setState({ isAddingLdap: false, editingLdap: undefined });
+  };
+
+  /* CONTENT PART */
+
   public content() {
-    if (this.state.isAdding) {
-      return <OAuthForm onCancel={this.cancel} />;
+
+    // OAUTH
+    if (this.state.isAddingOauth) {
+      return <OAuthForm onCancel={this.cancelOauth} />;
     }
 
-    if (this.state.editing) {
-      return <OAuthForm config={this.state.editing} onCancel={this.cancel} />;
+    if (this.state.editingOauth) {
+      return <OAuthForm config={this.state.editingOauth} onCancel={this.cancelOauth} />;
+    }
+
+    if (this.state.isAddingLdap) {
+      return <LdapForm onCancel={this.cancelLdap} />;
+    }
+
+    if (this.state.editingLdap) {
+      return <LdapForm config={this.state.editingLdap} onCancel={this.cancelLdap} />;
     }
 
     const enabled = <p className="m-enabled">Enabled</p>;
@@ -71,6 +114,44 @@ export default class ManageAuthenticationPage extends AdminBasePage<
 
     return (
       <>
+        <Segment>
+
+        <Heading
+          title="LDAP"
+          subtitle="You can use these section to add a LDAP connection for authenticating users"
+          size="small"
+        />
+
+          <List divided={true}>
+            {this.props.ldapProviders.map(o => (
+                <ListItem key={o.provider}>
+                  {(
+                    <>
+                      {Fider.session.user.isAdministrator && (
+                        <Button onClick={this.editLdap.bind(this, o.provider)} size="mini" className="right">
+                          <FaEdit />
+                          Edit
+                        </Button>
+                      )}
+                    </>
+                  )}
+                  <div className="l-provider">
+                    <strong>{o.displayName}</strong>
+                    {o.isEnabled ? enabled : disabled}
+                </div>
+                </ListItem>
+            ))
+           }
+          </List>
+
+        {Fider.session.user.isAdministrator && (
+          <Button color="positive" onClick={this.addNewLdap}>
+            Add new LDAP server
+          </Button>
+        )}
+        </Segment>
+        <Segment>
+
         <Heading
           title="OAuth Providers"
           subtitle="You can use these section to add any authentication provider thats supports the OAuth2 protocol."
@@ -83,19 +164,18 @@ export default class ManageAuthenticationPage extends AdminBasePage<
           </a>
           .
         </p>
-        <Segment>
           <List divided={true}>
-            {this.props.providers.map(o => (
+            {this.props.oauthProviders.map(o => (
               <ListItem key={o.provider}>
                 {o.isCustomProvider && (
                   <>
                     {Fider.session.user.isAdministrator && (
-                      <Button onClick={this.edit.bind(this, o.provider)} size="mini" className="right">
+                      <Button onClick={this.editOauth.bind(this, o.provider)} size="mini" className="right">
                         <FaEdit />
                         Edit
                       </Button>
                     )}
-                    <Button onClick={this.startTest.bind(this, o.provider)} size="mini" className="right">
+                    <Button onClick={this.startOauthTest.bind(this, o.provider)} size="mini" className="right">
                       <FaPlay />
                       Test
                     </Button>
@@ -115,12 +195,13 @@ export default class ManageAuthenticationPage extends AdminBasePage<
               </ListItem>
             ))}
           </List>
-        </Segment>
         {Fider.session.user.isAdministrator && (
-          <Button color="positive" onClick={this.addNew}>
-            Add new
+          <Button color="positive" onClick={this.addNewOauth}>
+            Add new OAUTH server
           </Button>
         )}
+        </Segment>
+
       </>
     );
   }

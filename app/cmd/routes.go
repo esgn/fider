@@ -145,6 +145,8 @@ func routes(r *web.Engine) *web.Engine {
 		ui.Get("/admin/tags", handlers.ManageTags())
 		ui.Get("/admin/authentication", handlers.ManageAuthentication())
 		ui.Get("/_api/admin/oauth/:provider", handlers.GetOAuthConfig())
+		ui.Get("/_api/admin/ldap/:provider", handlers.GetLdapConfig())
+
 
 		//From this step, only Administrators are allowed
 		ui.Use(middlewares.IsAuthorized(enum.RoleAdministrator))
@@ -159,6 +161,8 @@ func routes(r *web.Engine) *web.Engine {
 		ui.Post("/_api/admin/roles/:role/users", handlers.ChangeUserRole())
 		ui.Put("/_api/admin/users/:userID/block", handlers.BlockUser())
 		ui.Delete("/_api/admin/users/:userID/block", handlers.UnblockUser())
+		ui.Post("/_api/admin/ldap", handlers.SaveLdapConfig())
+
 
 		ui.Use(middlewares.RequireBillingEnabled())
 

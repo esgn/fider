@@ -113,9 +113,16 @@ func (s Service) Init() {
 	bus.AddHandler(saveVerificationKey)
 	bus.AddHandler(setKeyAsVerified)
 
+	// OAUTH
 	bus.AddHandler(listCustomOAuthConfig)
 	bus.AddHandler(getCustomOAuthConfigByProvider)
 	bus.AddHandler(saveCustomOAuthConfig)
+
+	// LDAP
+	bus.AddHandler(listCustomLdapConfig)
+	bus.AddHandler(saveCustomLdapConfig)
+	bus.AddHandler(getCustomLdapConfigByProvider)
+
 }
 
 type SqlHandler func(trx *dbx.Trx, tenant *models.Tenant, user *models.User) error

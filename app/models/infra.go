@@ -62,6 +62,38 @@ type OAuthConfig struct {
 	JSONUserEmailPath string
 }
 
+// CreateEditLdapConfig is used to create/edit an LDAP Configuration
+type CreateEditLdapConfig struct {
+	ID                    int
+	Provider              string       `json:"provider"`
+	DisplayName           string       `json:"displayName"`
+	Status                int          `json:"status"`
+	LdapDomain            string       `json:"ldapDomain"`
+	LdapPort              string	   `json:"ldapPort"`
+	BindUsername          string	   `json:"bindUsername"`
+	BindPassword          string	   `json:"bindPassword"`
+	RootDN                string	   `json:"rootDN"`
+	Scope                 string	   `json:"scope"`
+	UserSearchFilter      string	   `json:"userSearchFilter"`
+	UsernameLdapAttribute string	   `json:"usernameLdapAttribute"`
+}
+
+// LdapConfig is the configuration of a custom LDAP provider
+type LdapConfig struct {
+	ID                    int
+	Provider              string
+	DisplayName           string
+	Status                int
+	LdapDomain            string
+	LdapPort              string
+	BindUsername          string
+	BindPassword          string
+	RootDN                string
+	Scope                 string
+	UserSearchFilter      string
+	UsernameLdapAttribute string
+}
+
 // MarshalJSON returns the JSON encoding of OAuthConfig
 func (o OAuthConfig) MarshalJSON() ([]byte, error) {
 	secret := "..."
@@ -83,6 +115,24 @@ func (o OAuthConfig) MarshalJSON() ([]byte, error) {
 		"jsonUserIDPath":    o.JSONUserIDPath,
 		"jsonUserNamePath":  o.JSONUserNamePath,
 		"jsonUserEmailPath": o.JSONUserEmailPath,
+	})
+}
+
+// MarshalJSON returns the JSON encoding of OAuthConfig
+func (o LdapConfig) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"id":                     o.ID,
+		"provider":               o.Provider,
+		"displayName":            o.DisplayName,
+		"status":                 o.Status,
+		"ldapDomain":             o.LdapDomain,
+		"ldapPort":               o.LdapPort,
+		"bindUsername":           o.BindUsername,
+		"bindPassword":           "this information is not available to you",
+		"rootDN":                 o.RootDN,
+		"scope":                  o.Scope,
+		"userSearchFilter":       o.UserSearchFilter,
+		"usernameLdapAttribute":  o.UsernameLdapAttribute,
 	})
 }
 
