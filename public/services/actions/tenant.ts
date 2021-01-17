@@ -48,9 +48,20 @@ export const checkAvailability = async (subdomain: string): Promise<Result<Check
   return await http.get<CheckAvailabilityResponse>(`/_api/tenants/${subdomain}/availability`);
 };
 
+/* EMAIL SIGNIN */
+
 export const signIn = async (email: string): Promise<Result> => {
   return await http.post("/_api/signin", {
     email
+  });
+};
+
+/* LDAP AUTH */
+
+export const ldapSignIn = async (username: string, password: string, ldapProvider: string): Promise<Result> => {
+  return await http.post(`/_api/ldap/${ldapProvider}`, {
+    username,
+    password,
   });
 };
 
@@ -111,16 +122,23 @@ export interface CreateEditLdapConfigRequest {
   provider: string;
   displayName: string;
   status: number;
+  tls: number;
   ldapDomain: string;
   ldapPort: string;
   bindUsername: string;
   bindPassword: string;
   rootDN: string;
-  scope: string;
+  scope: number;
   userSearchFilter: string;
   usernameLdapAttribute: string;
+  nameLdapAttribute: string;
+  mailLdapAttribute: string;
 }
 
 export const saveLdapConfig = async (request: CreateEditLdapConfigRequest): Promise<Result> => {
   return await http.post("/_api/admin/ldap", request);
+};
+
+export const testLdapServer = async (provider: string): Promise<Result> => {
+  return await http.get(`/_api/admin/ldap/${provider}/test`);
 };

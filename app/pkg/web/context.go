@@ -496,6 +496,15 @@ func (c *Context) Redirect(url string) error {
 	return nil
 }
 
+// SeeOther redirects any request to a provided URL using GET method
+func (c *Context) SeeOther(url string) error {
+	c.Response.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	c.Response.Header().Set("Location", url)
+	c.ResponseStatusCode = http.StatusSeeOther
+	c.Response.WriteHeader(http.StatusSeeOther)
+	return nil
+}
+
 // PermanentRedirect the request to a provided URL
 func (c *Context) PermanentRedirect(url string) error {
 	c.Response.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")

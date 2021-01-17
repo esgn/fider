@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Segment, List, ListItem, Button, Heading, OAuthProviderLogo } from "@fider/components";
+import { Segment, List, ListItem, Button, Heading, OAuthProviderLogo, Field } from "@fider/components";
 import { OAuthConfig, OAuthProviderOption, LdapConfig, LdapProviderOption } from "@fider/models";
 import { OAuthForm } from "../components/OAuthForm";
 import { LdapForm } from "../components/LdapForm";
@@ -79,10 +79,15 @@ export default class ManageAuthenticationPage extends AdminBasePage<
     }
   };
 
-  /*private startLdapTest = async (provider: string) => {
-    const redirect = `${Fider.settings.baseURL}/ldap/${provider}/echo`;
-    window.open(`/ldap/${provider}?redirect=${redirect}`, "oauth-test", "width=1100,height=600,status=no,menubar=no");
-  };*/
+  private startLdapTest = async (provider: string) => {
+    const result = await actions.testLdapServer(provider);
+    if (result.ok)
+    {
+      notify.success("Success ! LDAP is available !")
+    } else {
+      notify.error("LDAP is not avaible. Please review configuration")
+    }
+  };
 
   private cancelLdap = async () => {
     this.setState({ isAddingLdap: false, editingLdap: undefined });
@@ -114,6 +119,20 @@ export default class ManageAuthenticationPage extends AdminBasePage<
 
     return (
       <>
+
+        <Segment>
+        <Heading
+          title="TODO : Mail authentication"
+          subtitle="You can use this section to deactivate or activate mail authentication"          size="small"
+        />      
+        <p className="info">
+          Bear in mind that an other administrator from another user provider (LDAP or OAuth) must have been defined before doing so
+        </p>
+        <Field label="Status">
+        </Field>
+        </Segment>
+
+
         <Segment>
 
         <Heading
@@ -132,7 +151,11 @@ export default class ManageAuthenticationPage extends AdminBasePage<
                           <FaEdit />
                           Edit
                         </Button>
-                      )}
+                         )}
+                        <Button onClick={this.startLdapTest.bind(this, o.provider)} size="mini" className="right">
+                            <FaPlay />
+                              Test
+                        </Button>
                     </>
                   )}
                   <div className="l-provider">

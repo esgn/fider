@@ -46,6 +46,40 @@ func (input *SignInByEmail) Validate(ctx context.Context, user *models.User) *va
 	return result
 }
 
+// SignInWithLdap happens when user request to sign in with ldap
+type SignInWithLdap struct {
+	Model *models.SignInWithLdap
+}
+
+// Initialize the model
+func (input *SignInWithLdap) Initialize() interface{} {
+	input.Model = new(models.SignInWithLdap)
+	return input.Model
+}
+
+// IsAuthorized returns true if current user is authorized to perform this action
+func (input *SignInWithLdap) IsAuthorized(ctx context.Context, user *models.User) bool {
+	return true
+}
+
+// Validate if current model is valid
+func (input *SignInWithLdap) Validate(ctx context.Context, user *models.User) *validate.Result {
+
+	result := validate.Success()
+
+	if input.Model.Username == "" {
+		result.AddFieldFailure("ldapUsername", "Username is required.")
+		return result
+	}
+
+	if input.Model.Password == "" {
+		result.AddFieldFailure("ldapPassword", "Password is required.")
+		return result
+	}
+
+	return result
+}
+
 // CompleteProfile happens when users completes their profile during first time sign in
 type CompleteProfile struct {
 	Model *models.CompleteProfile

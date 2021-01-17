@@ -198,11 +198,25 @@ func (r *Renderer) Render(w io.Writer, statusCode int, name string, props Props,
 		private["canonicalURL"] = canonicalURL
 	}
 
+	/* OAUTH */
+
 	oauthProviders := &query.ListActiveOAuthProviders{
 		Result: make([]*dto.OAuthProviderOption, 0),
 	}
 	if !ctx.IsAuthenticated() && statusCode >= 200 && statusCode < 300 {
 		err = bus.Dispatch(ctx, oauthProviders)
+		if err != nil {
+			panic(errors.Wrap(err, "failed to get list of providers"))
+		}
+	}
+
+	/* LDAP */
+
+	ldapProviders := &query.ListActiveLdapProviders{
+		Result: make([]*dto.LdapProviderOption, 0),
+	}
+	if !ctx.IsAuthenticated() && statusCode >= 200 && statusCode < 300 {
+		err = bus.Dispatch(ctx, ldapProviders)
 		if err != nil {
 			panic(errors.Wrap(err, "failed to get list of providers"))
 		}
@@ -225,6 +239,7 @@ func (r *Renderer) Render(w io.Writer, statusCode int, name string, props Props,
 		"tenantAssetsURL": TenantAssetsURL(ctx, ""),
 		"globalAssetsURL": GlobalAssetsURL(ctx, ""),
 		"oauth":           oauthProviders.Result,
+		"ldap":            ldapProviders.Result,
 	}
 
 	if ctx.IsAuthenticated() {

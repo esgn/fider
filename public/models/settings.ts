@@ -12,14 +12,6 @@ export interface OAuthProviderOption {
 export interface LdapProviderOption {
   provider: string;
   displayName: string;
-  ldapDomain: string;
-  ldapPort: string;
-  bindUsername: string;
-  bindPassword: string;
-  rootDN: string;
-  scope: string;
-  userSearchFilter: string;
-  usernameLdapAttribute: string;
   isEnabled: boolean;
 }
 
@@ -69,18 +61,28 @@ export const LdapConfigStatus = {
   Enabled: 2
 }
 
+// These values derived from go-ldap v3
+export const LdapScopeStatus = {
+  ScopeBaseObject : 1,
+  ScopeSingleLevel: 2,
+  ScopeWholeSubtree: 3
+}
+
 export interface LdapConfig {
   provider: string;
   displayName: string;
   status: number;
+  tls: number;
   ldapDomain: string;
   ldapPort: string;
   bindUsername: string;
   bindPassword: string;
   rootDN: string;
-  scope: string;
+  scope: number;
   userSearchFilter: string;
   usernameLdapAttribute: string;
+  nameLdapAttribute: string;
+  mailLdapAttribute: string;
 }
 
 export interface ImageUpload {

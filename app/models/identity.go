@@ -73,7 +73,9 @@ func (u *User) IsAdministrator() bool {
 	return u.Role == enum.RoleAdministrator
 }
 
-//UserProvider represents the relationship between an User and an Authentication provide
+//UserProvider represents the relationship between an User and an Authentication provider
+// Name is provider name that is to say it's unique identifier
+// UID is the user identifier
 type UserProvider struct {
 	Name string
 	UID  string
@@ -148,6 +150,12 @@ type UpdateTenantPrivacy struct {
 type SignInByEmail struct {
 	Email           string `json:"email" format:"lower"`
 	VerificationKey string
+}
+
+//SignInWithLdap is the input model when user request to sign in by email
+type SignInWithLdap struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
 //GetEmail returns the email being verified

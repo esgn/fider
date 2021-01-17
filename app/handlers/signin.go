@@ -56,6 +56,7 @@ func SignInByEmail() web.HandlerFunc {
 			Duration: 30 * time.Minute,
 			Request:  input.Model,
 		})
+
 		if err != nil {
 			return c.Failure(err)
 		}

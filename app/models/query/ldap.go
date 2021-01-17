@@ -25,7 +25,8 @@ type GetLdapAuthorizationURL struct {
 
 type GetLdapProfile struct {
 	Provider string
-	Code     string
+	Username string
+	Password string
 
 	Result *dto.LdapUserProfile
 }

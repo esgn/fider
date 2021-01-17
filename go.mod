@@ -6,6 +6,8 @@ require (
 	github.com/aws/aws-sdk-go v1.25.25
 	github.com/cosmtrek/air v1.0.2
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/go-ldap/ldap v3.0.3+incompatible
+	github.com/go-ldap/ldap/v3 v3.2.4 // indirect
 	github.com/goenning/imagic v0.0.1
 	github.com/goenning/letteravatar v0.0.0-20180605200324-553181ed4055
 	github.com/goenning/vat v0.1.0
@@ -22,6 +24,7 @@ require (
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/russross/blackfriday v1.5.2
 	github.com/stripe/stripe-go v64.1.0+incompatible
-	golang.org/x/crypto v0.0.0-20191029031824-8986dd9e96cf
+	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
 )

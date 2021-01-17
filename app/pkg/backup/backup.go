@@ -23,6 +23,7 @@ func Create(ctx context.Context) (*bytes.Buffer, error) {
 		"email_verifications",
 		"notifications",
 		"oauth_providers",
+		"ldap_providers",
 		"posts",
 		"post_subscribers",
 		"post_tags",

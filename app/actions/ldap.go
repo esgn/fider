@@ -2,8 +2,8 @@ package actions
 
 import (
 	"context"
-	"strings"
 	"strconv"
+	"strings"
 
 	"github.com/getfider/fider/app/models/enum"
 	"github.com/getfider/fider/app/models/query"
@@ -18,7 +18,7 @@ import (
 func IsInteger(s string) bool {
 	_, err := strconv.Atoi(s)
 	return err == nil
- }
+}
 
 // CreateEditLdapConfig is used to create/edit Ldap config
 type CreateEditLdapConfig struct {
@@ -60,6 +60,17 @@ func (input *CreateEditLdapConfig) Validate(ctx context.Context, user *models.Us
 		result.AddFieldFailure("status", "Invalid status.")
 	}
 
+	if input.Model.Tls != enum.LdapConfigEnabled &&
+		input.Model.Tls != enum.LdapConfigDisabled {
+		result.AddFieldFailure("tls", "Invalid TLS status.")
+	}
+
+	if input.Model.Scope != enum.ScopeBaseObject &&
+		input.Model.Scope != enum.ScopeSingleLevel &&
+		input.Model.Scope != enum.ScopeWholeSubtree {
+		result.AddFieldFailure("scope", "Invalid scope status.")
+	}
+
 	if input.Model.DisplayName == "" {
 		result.AddFieldFailure("displayName", "Display Name is required.")
 	} else if len(input.Model.DisplayName) > 50 {
@@ -98,22 +109,28 @@ func (input *CreateEditLdapConfig) Validate(ctx context.Context, user *models.Us
 		result.AddFieldFailure("rootDN", "Root DN must have less than 100 characters.")
 	}
 
-	if input.Model.Scope == "" {
-		result.AddFieldFailure("scope", "Scope is required.")
-	} else if len(input.Model.Scope) > 100 {
-		result.AddFieldFailure("scope", "Scope must have less than 100 characters.")
-	}
-
 	if input.Model.UserSearchFilter == "" {
-		result.AddFieldFailure("scope", "User Search Filter is required.")
+		result.AddFieldFailure("userSearchFilter", "User Search Filter is required.")
 	} else if len(input.Model.UserSearchFilter) > 100 {
-		result.AddFieldFailure("scope", "User Search Filter must have less than 100 characters.")
+		result.AddFieldFailure("userSearchFilter", "User Search Filter must have less than 100 characters.")
 	}
 
 	if input.Model.UsernameLdapAttribute == "" {
 		result.AddFieldFailure("usernameLdapAttribute", "Username LDAP attribute is required.")
 	} else if len(input.Model.UsernameLdapAttribute) > 100 {
 		result.AddFieldFailure("scope", "Username LDAP attribute must have less than 100 characters.")
+	}
+
+	if input.Model.NameLdapAttribute == "" {
+		result.AddFieldFailure("nameLdapAttribute", "Full Name LDAP attribute is required.")
+	} else if len(input.Model.NameLdapAttribute) > 100 {
+		result.AddFieldFailure("nameLdapAttribute", "Full Name LDAP attribute must have less than 100 characters.")
+	}
+
+	if input.Model.MailLdapAttribute == "" {
+		result.AddFieldFailure("mailLdapAttribute", "Mail LDAP attribute is required.")
+	} else if len(input.Model.MailLdapAttribute) > 100 {
+		result.AddFieldFailure("mailLdapAttribute", "Username LDAP attribute must have less than 100 characters.")
 	}
 
 	return result

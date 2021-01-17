@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	//"fmt"
 	"github.com/getfider/fider/app/actions"
 	"github.com/getfider/fider/app/models/cmd"
 	"github.com/getfider/fider/app/models/query"
@@ -121,7 +120,7 @@ func ManageAuthentication() web.HandlerFunc {
 			ChunkName: "ManageAuthentication.page",
 			Data: web.Map{
 				"oauthProviders": listOauthProviders.Result,
-				"ldapProviders": listLdapProviders.Result,
+				"ldapProviders":  listLdapProviders.Result,
 			},
 		})
 
@@ -193,6 +192,20 @@ func SaveLdapConfig() web.HandlerFunc {
 		); err != nil {
 			return c.Failure(err)
 		}
+		return c.Ok(web.Map{})
+	}
+}
+
+// TestLdapServer is used to test an ldap provider
+func TestLdapServer() web.HandlerFunc {
+	return func(c *web.Context) error {
+
+		testLdapServer := &cmd.TestLdapServer{Provider: c.Param("provider")}
+
+		if err := bus.Dispatch(c, testLdapServer); err != nil {
+			return c.Failure(err)
+		}
+
 		return c.Ok(web.Map{})
 	}
 }

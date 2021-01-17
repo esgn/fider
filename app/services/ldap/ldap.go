@@ -2,11 +2,18 @@ package ldap
 
 import (
 	"context"
+	"crypto/tls"
+	"fmt"
+	"log"
+	"strings"
+
+	ldap "github.com/go-ldap/ldap"
+
 	//"strings"
 
 	//"github.com/getfider/fider/app"
 	"github.com/getfider/fider/app/models"
-	//"github.com/getfider/fider/app/models/cmd"
+	"github.com/getfider/fider/app/models/cmd"
 	"github.com/getfider/fider/app/models/dto"
 	"github.com/getfider/fider/app/models/enum"
 	"github.com/getfider/fider/app/models/query"
@@ -39,8 +46,10 @@ func (s Service) Init() {
 	//bus.AddHandler(getOAuthAuthorizationURL)
 	//bus.AddHandler(getOAuthProfile)
 	//bus.AddHandler(getOAuthRawProfile)
-	//bus.AddHandler(listActiveOAuthProviders)
+	bus.AddHandler(getLdapProfile)
+	bus.AddHandler(listActiveLdapProviders)
 	bus.AddHandler(listAllLdapProviders)
+	bus.AddHandler(testLdapServer)
 }
 
 func getProviderStatus(key string) int {
@@ -48,6 +57,196 @@ func getProviderStatus(key string) int {
 		return enum.LdapConfigDisabled
 	}
 	return enum.LdapConfigEnabled
+}
+
+func testLdapServer(ctx context.Context, c *cmd.TestLdapServer) error {
+
+	ldapConfig := &query.GetCustomLdapConfigByProvider{Provider: c.Provider}
+	err := bus.Dispatch(ctx, ldapConfig)
+	if err != nil {
+
+		return err
+	}
+
+	ldapURL := "ldap://" + ldapConfig.Result.LdapDomain + ":" + ldapConfig.Result.LdapPort
+
+	// Connect to LDAP
+	l, err := ldap.DialURL(ldapURL)
+	if err != nil {
+		return err
+	}
+	defer l.Close()
+
+	// Reconnect with TLS
+	if ldapConfig.Result.Tls == enum.LdapConfigEnabled {
+		err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Bind with read only user
+	err = l.Bind(ldapConfig.Result.BindUsername, ldapConfig.Result.BindPassword)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// getLdapProfile is the main method implementing LDAD authentication
+
+func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
+
+	// authentify user against ldap and get user profile
+
+	ldapConfig := &query.GetCustomLdapConfigByProvider{Provider: q.Provider}
+	err := bus.Dispatch(ctx, ldapConfig)
+	if err != nil {
+
+		return err
+	}
+
+	ldapURL := "ldap://" + ldapConfig.Result.LdapDomain + ":" + ldapConfig.Result.LdapPort
+
+	// Connect to LDAP
+	l, err := ldap.DialURL(ldapURL)
+	if err != nil {
+		return err
+	}
+	defer l.Close()
+
+	// Reconnect with TLS
+	if ldapConfig.Result.Tls == enum.LdapConfigEnabled {
+		err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
+		if err != nil {
+			return err
+		}
+	}
+
+	// First Bind with read only user
+	err = l.Bind(ldapConfig.Result.BindUsername, ldapConfig.Result.BindPassword)
+	if err != nil {
+		return err
+	}
+
+	// Search for given username
+	var filter = "(&" + ldapConfig.Result.UserSearchFilter + "(" + ldapConfig.Result.UsernameLdapAttribute + "=" + q.Username + "))"
+	searchRequest := ldap.NewSearchRequest(
+		ldapConfig.Result.RootDN,
+		ldapConfig.Result.Scope, ldap.NeverDerefAliases, 0, 0, false,
+		filter,
+		[]string{"dn"},
+		nil,
+	)
+
+	sr, err := l.Search(searchRequest)
+	if err != nil {
+		return err
+	}
+
+	// Verify search results
+	if len(sr.Entries) != 1 {
+		fmt.Println("User does not exist or too many entries returned")
+		fmt.Println(filter)
+		fmt.Println(sr)
+		return errors.New("User not found")
+	}
+
+	// Get dn of the user to be tested
+	userDN := sr.Entries[0].DN
+
+	// Bind as user to verify their password
+	err = l.Bind(userDN, q.Password)
+	if err != nil {
+		fmt.Println("Cannot bind with client username and password")
+		return err
+	}
+
+	// Rebind with read only user
+	err = l.Bind(ldapConfig.Result.BindUsername, ldapConfig.Result.BindPassword)
+	if err != nil {
+		return err
+	}
+
+	searchRequest2 := ldap.NewSearchRequest(
+		ldapConfig.Result.RootDN,
+		ldapConfig.Result.Scope, ldap.NeverDerefAliases, 0, 0, false,
+		filter,
+		[]string{ldapConfig.Result.MailLdapAttribute, ldapConfig.Result.NameLdapAttribute, ldapConfig.Result.UsernameLdapAttribute},
+		nil,
+	)
+
+	sr2, err2 := l.Search(searchRequest2)
+	if err2 != nil {
+		return err
+	}
+
+	if len(sr2.Entries) != 1 {
+		log.Fatal("Missing attributes")
+		return errors.New("User not found")
+	}
+
+	profile := &dto.LdapUserProfile{
+		ID:    strings.TrimSpace(sr2.Entries[0].GetAttributeValue(ldapConfig.Result.UsernameLdapAttribute)),
+		Name:  strings.TrimSpace(sr2.Entries[0].GetAttributeValue(ldapConfig.Result.NameLdapAttribute)),
+		Email: strings.ToLower(sr2.Entries[0].GetAttributeValue(ldapConfig.Result.MailLdapAttribute)),
+	}
+
+	q.Result = profile
+
+	return nil
+}
+
+func listActiveLdapProviders(ctx context.Context, q *query.ListActiveLdapProviders) error {
+	allLdapProviders := &query.ListAllLdapProviders{}
+	err := bus.Dispatch(ctx, allLdapProviders)
+	if err != nil {
+		return err
+	}
+
+	list := make([]*dto.LdapProviderOption, 0)
+	for _, p := range allLdapProviders.Result {
+		if p.IsEnabled {
+			list = append(list, p)
+		}
+	}
+	q.Result = list
+	return nil
+}
+
+func listAllLdapProviders(ctx context.Context, q *query.ListAllLdapProviders) error {
+	ldapProviders := &query.ListCustomLdapConfig{}
+	err := bus.Dispatch(ctx, ldapProviders)
+	if err != nil {
+		return errors.Wrap(err, "failed to get list of custom Ldap providers")
+	}
+
+	list := make([]*dto.LdapProviderOption, 0)
+
+	//ldapBaseURL := web.OAuthBaseURL(ctx)
+
+	for _, p := range ldapProviders.Result {
+		list = append(list, &dto.LdapProviderOption{
+			Provider:    p.Provider,
+			DisplayName: p.DisplayName,
+			IsEnabled:   p.Status == enum.LdapConfigEnabled,
+		})
+	}
+
+	q.Result = list
+	return nil
+}
+
+func getConfig(ctx context.Context, provider string) (*models.LdapConfig, error) {
+
+	getCustomLdap := &query.GetCustomLdapConfigByProvider{Provider: provider}
+	err := bus.Dispatch(ctx, getCustomLdap)
+	if err != nil {
+		return nil, err
+	}
+
+	return getCustomLdap.Result, nil
 }
 
 /*func parseLdapRawProfile(ctx context.Context, c *cmd.ParseLdapRawProfile) error {
@@ -181,63 +380,4 @@ func getOAuthRawProfile(ctx context.Context, q *query.GetOAuthRawProfile) error 
 	q.Result = string(req.ResponseBody)
 	return nil
 }
-
-func listActiveOAuthProviders(ctx context.Context, q *query.ListActiveOAuthProviders) error {
-	allOAuthProviders := &query.ListAllOAuthProviders{}
-	err := bus.Dispatch(ctx, allOAuthProviders)
-	if err != nil {
-		return err
-	}
-
-	list := make([]*dto.OAuthProviderOption, 0)
-	for _, p := range allOAuthProviders.Result {
-		if p.IsEnabled {
-			list = append(list, p)
-		}
-	}
-	q.Result = list
-	return nil
-}
 */
-
-func listAllLdapProviders(ctx context.Context, q *query.ListAllLdapProviders) error {
-	ldapProviders := &query.ListCustomLdapConfig{}
-	err := bus.Dispatch(ctx, ldapProviders)
-	if err != nil {
-		return errors.Wrap(err, "failed to get list of custom Ldap providers")
-	}
-
-	list := make([]*dto.LdapProviderOption, 0)
-
-	//ldapBaseURL := web.OAuthBaseURL(ctx)
-
-	for _, p := range ldapProviders.Result {
-		list = append(list, &dto.LdapProviderOption {
-			Provider:                   p.Provider,
-			DisplayName:                p.DisplayName,
-			LdapDomain:		            p.LdapDomain,
-			LdapPort:                   p.LdapPort,
-			BindUsername:               p.BindUsername,
-			BindPassword:               p.BindPassword,
-			RootDN:                     p.RootDN,
-			Scope:                      p.Scope,
-			UserSearchFilter:           p.UserSearchFilter,
-			UsernameLdapAttribute:      p.UsernameLdapAttribute,
-			IsEnabled:                  p.Status == enum.LdapConfigEnabled,
-		})
-	}
-
-	q.Result = list
-	return nil
-}
-
-func getConfig(ctx context.Context, provider string) (*models.LdapConfig, error) {
-
-	getCustomLdap := &query.GetCustomLdapConfigByProvider{Provider: provider}
-	err := bus.Dispatch(ctx, getCustomLdap)
-	if err != nil {
-		return nil, err
-	}
-
-	return getCustomLdap.Result, nil
-}
