@@ -101,7 +101,7 @@ export const SignInControl: React.FunctionComponent<SignInControlProps> = props 
           </div>
         )}
 
-      {ldapProvidersLen > 0 && <div className="c-divider">OR</div>}
+      {ldapProvidersLen > 0 && (props.useEmail || oauthProvidersLen > 0) && <div className="c-divider">OR</div>}
 
       {oauthProvidersLen > 0 && (
         <div className="l-signin-social">
@@ -124,7 +124,7 @@ export const SignInControl: React.FunctionComponent<SignInControlProps> = props 
         </div>
       )}
 
-      {oauthProvidersLen > 0 && <div className="c-divider">OR</div>}
+      {oauthProvidersLen > 0 && props.useEmail && <div className="c-divider">OR</div>}
 
       {props.useEmail && (
         <div className="l-signin-email">

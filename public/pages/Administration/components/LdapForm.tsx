@@ -34,8 +34,10 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
 
   const [error, setError] = useState<Failure | undefined>();
 
-  console.log("scope "+ scope)
-  console.log((props.config && props.config.scope))
+  let ldapScopeItems : DropDownItem[] = [];
+  for (const [k, v] of Object.entries(LdapScopeStatus)) {
+    ldapScopeItems.push({value:v, label:k});
+  }
 
   const updateScope = (item: DropDownItem) => {
     if(item) {
@@ -166,7 +168,8 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
         <Field label="Search scope">
             <DropDown
                 defaultValue={scope}
-                items={[{ value: 1, label: "ScopeBaseObject" },{ value: 2, label: "ScopeSingleLevel" },{value: 3, label:"ScopeWholeSubtree"}]}
+                //items={[{ value: 1, label: "ScopeBaseObject" },{ value: 2, label: "ScopeSingleLevel" },{value: 3, label:"ScopeWholeSubtree"}]}
+                items={ldapScopeItems}
                 onChange={updateScope}
             />
         </Field>
