@@ -22,6 +22,7 @@ interface InputProps {
   onFocus?: () => void;
   inputRef?: React.MutableRefObject<any>;
   onChange?: (value: string) => void;
+  password?: boolean;
 }
 
 export const Input: React.FunctionComponent<InputProps> = props => {
@@ -62,7 +63,7 @@ export const Input: React.FunctionComponent<InputProps> = props => {
           <div className="c-form-field-wrapper">
             <input
               id={`input-${props.field}`}
-              type="text"
+              type={props.password ? "password" : "text"}
               autoComplete={props.autoComplete}
               tabIndex={props.noTabFocus ? -1 : undefined}
               ref={props.inputRef}

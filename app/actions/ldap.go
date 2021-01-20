@@ -60,9 +60,10 @@ func (input *CreateEditLdapConfig) Validate(ctx context.Context, user *models.Us
 		result.AddFieldFailure("status", "Invalid status.")
 	}
 
-	if input.Model.Tls != enum.LdapConfigEnabled &&
-		input.Model.Tls != enum.LdapConfigDisabled {
-		result.AddFieldFailure("tls", "Invalid TLS status.")
+	if input.Model.Protocol != enum.LDAP &&
+		input.Model.Protocol != enum.LDAPTLS &&
+		input.Model.Protocol != enum.LDAPS {
+		result.AddFieldFailure("protocol", "Invalid Protocol status.")
 	}
 
 	if input.Model.Scope != enum.ScopeBaseObject &&

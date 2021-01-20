@@ -81,6 +81,7 @@ export const SignInControl: React.FunctionComponent<SignInControlProps> = props 
                             label="LDAP Password"
                             placeholder="LDAP password"
                             onChange={setPassword}
+                            password={true}
                             ></Input>
 
               <Field label="LDAP Server">

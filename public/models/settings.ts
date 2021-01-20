@@ -62,17 +62,26 @@ export const LdapConfigStatus = {
 }
 
 // These values derived from go-ldap v3
+// Values are +1 compared to go-ldap
 export const LdapScopeStatus = {
   ScopeBaseObject : 1,
   ScopeSingleLevel: 2,
   ScopeWholeSubtree: 3
 }
 
+// These values derived from go-ldap v3
+// Values are +1 compared to go-ldap
+export const LdapProtocols = {
+  "ldap://" : 1,
+  "ldap:// + StartTLS": 2,
+  "ldaps://": 3
+}
+
 export interface LdapConfig {
   provider: string;
   displayName: string;
   status: number;
-  tls: number;
+  protocol: number;
   ldapDomain: string;
   ldapPort: string;
   bindUsername: string;

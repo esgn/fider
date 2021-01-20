@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { LdapConfig, LdapConfigStatus, LdapScopeStatus} from "@fider/models";
+import { LdapConfig, LdapConfigStatus, LdapProtocols, LdapScopeStatus} from "@fider/models";
 import { Failure, actions } from "@fider/services";
 import { Form, Button, Input, Heading, Field, Toggle, DropDown, DropDownItem } from "@fider/components";
 import { useFider } from "@fider/hooks";
@@ -17,7 +17,8 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
   const [displayName, setDisplayName] = useState((props.config && props.config.displayName) || "");
 
   const [enabled, setEnabled] = useState((props.config && props.config.status === LdapConfigStatus.Enabled) || false);
-  const [ldapTLS, setLdapTLS] = useState((props.config && props.config.tls === LdapConfigStatus.Enabled) || false);
+  //const [ldapTLS, setLdapTLS] = useState((props.config && props.config.tls === LdapConfigStatus.Enabled) || false);
+  const [protocol, setProtocol] = useState((props.config && props.config.protocol) || 1);
   const [scope, setScope] = useState((props.config && props.config.scope) || 3);
 
   const [ldapDomain, setLdapDomain] = useState((props.config && props.config.ldapDomain) || "");
@@ -34,6 +35,22 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
 
   const [error, setError] = useState<Failure | undefined>();
 
+  let ldapProtocolItems : DropDownItem[] = [];
+  for (const [k, v] of Object.entries(LdapProtocols)) {
+    ldapProtocolItems.push({value:v, label:k});
+  }
+
+  const updateProtocol = (item: DropDownItem) => {
+    if(item) {
+      setProtocol(item.value as number)
+      if (item.value == LdapProtocols["ldaps://"]) {
+        setLdapPort("636")
+      } else {
+        setLdapPort("389")
+      }
+    }
+  };
+
   let ldapScopeItems : DropDownItem[] = [];
   for (const [k, v] of Object.entries(LdapScopeStatus)) {
     ldapScopeItems.push({value:v, label:k});
@@ -49,7 +66,7 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
     const result = await actions.saveLdapConfig({
       provider,
       status: enabled ? LdapConfigStatus.Enabled : LdapConfigStatus.Disabled,
-      tls: ldapTLS ?  LdapConfigStatus.Enabled : LdapConfigStatus.Disabled,
+      protocol,
       displayName,
       ldapDomain,
       ldapPort,
@@ -93,7 +110,17 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
             onChange={setDisplayName}
             placeholder="My LDAP server"
         />
+        <p className="info">The name that will be displayed in the login form</p>
 
+
+          <Field label="LDAP protocol">
+            <DropDown
+                defaultValue={protocol}
+                items={ldapProtocolItems}
+                onChange={updateProtocol}
+            />
+        </Field>
+        <p className="info">Changing protocol will update port value with default port</p>
 
         <Input
           field="ldapDomain"
@@ -102,7 +129,7 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
           value={ldapDomain}
           disabled={!fider.session.user.isAdministrator}
           onChange={setLdapDomain}
-          placeholder="mydomain.com"
+          placeholder="example.org"
         />
 
         <Input
@@ -113,15 +140,6 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
           disabled={!fider.session.user.isAdministrator}
           onChange={setLdapPort}
         />
-
-        <div className="row">
-          <div className="col-sm-4">
-            <Field label="Enable TLS ?">
-              <Toggle active={ldapTLS} onToggle={setLdapTLS} />
-              <span>{ldapTLS ? "TLS activated" : "TLS deactivated"}</span>
-            </Field>
-          </div>
-        </div>
 
         <Input
           field="bindUsername"
@@ -136,6 +154,7 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
         <Input
           field="bindPassword"
           label="Bind Password"
+          password={true}
           maxLength={100}
           value={bindPassword}
           disabled={!bindPasswordEnabled}
@@ -181,7 +200,7 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
           value={userSearchFilter}
           disabled={!fider.session.user.isAdministrator}
           onChange={setUserSearchFilter}
-          placeholder="(objectClass=inetOrgPerson)"
+          placeholder="(objectClass=organizationalPerson)"
         />
 
         <Input
@@ -201,7 +220,7 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
           value={nameLdapAttribute}
           disabled={!fider.session.user.isAdministrator}
           onChange={setNameLdapAttribute}
-          placeholder="cn"
+          placeholder="name"
         />
 
         <Input

@@ -5,10 +5,19 @@ var (
 	LdapConfigDisabled = 1
 	//LdapConfigEnabled is used to enable an LdapConfig for public use
 	LdapConfigEnabled = 2
-	//ScopeBaseObject TODO
+	//ScopeBaseObject is used to define the LDAP search scope
+	//In go-ldap this corresponding value is 0
 	ScopeBaseObject = 1
-	//ScopeSingleLevel TODO
+	//ScopeSingleLevel is used to define the LDAP search scope
+	//In go-ldap this corresponding value is 1
 	ScopeSingleLevel = 2
-	//ScopeWholeSubtree TODO
+	//ScopeWholeSubtree is used to define the LDAP search scope
+	//In go-ldap this corresponding value is 2
 	ScopeWholeSubtree = 3
+	//LDAP protocol identifier
+	LDAP = 1
+	//LdapTLS protocol identifier
+	LDAPTLS = 2
+	//LDAPS protocole identifier
+	LDAPS = 3
 )

@@ -15,17 +15,10 @@ create table if not exists ldap_providers (
   username_ldap_attribute  varchar(100) not null,
   name_ldap_attribute      varchar(100) not null,
   mail_ldap_attribute      varchar(100) not null,
-  tls                      int not null,
+  protocol                      int not null,
   created_on               timestamptz not null default now(),
   primary key (id),
   foreign key (tenant_id) references tenants(id)
 );
 
 CREATE UNIQUE INDEX tenant_id_ldap_provider_key ON ldap_providers (tenant_id, provider);
-
--- TODO: This seems in fact unnecessary. Make sure it really is
--- Add identity provider type 
--- 0 is oauth
--- 1 is ldap
--- ALTER TABLE user_providers ADD COLUMN provider_type int not null;
--- UPDATE user_providers SET provider_type = 0;

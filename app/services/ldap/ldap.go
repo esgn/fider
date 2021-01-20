@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"log"
 	"strings"
 
 	ldap "github.com/go-ldap/ldap"
@@ -19,6 +18,7 @@ import (
 	"github.com/getfider/fider/app/models/query"
 	"github.com/getfider/fider/app/pkg/bus"
 	"github.com/getfider/fider/app/pkg/errors"
+	"github.com/getfider/fider/app/pkg/log"
 	//"github.com/getfider/fider/app/pkg/jsonq"
 	//"github.com/getfider/fider/app/pkg/validate"
 )
@@ -64,23 +64,29 @@ func testLdapServer(ctx context.Context, c *cmd.TestLdapServer) error {
 	ldapConfig := &query.GetCustomLdapConfigByProvider{Provider: c.Provider}
 	err := bus.Dispatch(ctx, ldapConfig)
 	if err != nil {
-
+		log.Errorf(ctx, " Could not get LDAP information for @{Provider}", dto.Props{"Provider": c.Provider})
 		return err
 	}
 
-	ldapURL := "ldap://" + ldapConfig.Result.LdapDomain + ":" + ldapConfig.Result.LdapPort
+	protocol := "ldap://"
+	if ldapConfig.Result.Protocol == enum.LDAPS {
+		protocol = "ldaps://"
+	}
+	ldapURL := protocol + ldapConfig.Result.LdapDomain + ":" + ldapConfig.Result.LdapPort
 
 	// Connect to LDAP
 	l, err := ldap.DialURL(ldapURL)
 	if err != nil {
+		log.Errorf(ctx, "Could not dial LDAP url : @{LdapURL}", dto.Props{"LdapURL": ldapURL})
 		return err
 	}
 	defer l.Close()
 
 	// Reconnect with TLS
-	if ldapConfig.Result.Tls == enum.LdapConfigEnabled {
+	if ldapConfig.Result.Protocol == enum.LDAPTLS {
 		err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
 		if err != nil {
+			log.Errorf(ctx, "Could not activate TLS for @{LdapURL}", dto.Props{"LdapURL": ldapURL})
 			return err
 		}
 	}
@@ -88,6 +94,7 @@ func testLdapServer(ctx context.Context, c *cmd.TestLdapServer) error {
 	// Bind with read only user
 	err = l.Bind(ldapConfig.Result.BindUsername, ldapConfig.Result.BindPassword)
 	if err != nil {
+		log.Errorf(ctx, "Could not bind with @{Username} for @{LdapURL}", dto.Props{"Username": ldapConfig.Result.BindUsername, "LdapURL": ldapURL})
 		return err
 	}
 
@@ -103,23 +110,29 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 	ldapConfig := &query.GetCustomLdapConfigByProvider{Provider: q.Provider}
 	err := bus.Dispatch(ctx, ldapConfig)
 	if err != nil {
-
+		log.Errorf(ctx, " Could not get LDAP information for @{Provider}", dto.Props{"Provider": q.Provider})
 		return err
 	}
 
-	ldapURL := "ldap://" + ldapConfig.Result.LdapDomain + ":" + ldapConfig.Result.LdapPort
+	protocol := "ldap://"
+	if ldapConfig.Result.Protocol == enum.LDAPS {
+		protocol = "ldaps://"
+	}
+	ldapURL := protocol + ldapConfig.Result.LdapDomain + ":" + ldapConfig.Result.LdapPort
 
 	// Connect to LDAP
 	l, err := ldap.DialURL(ldapURL)
 	if err != nil {
+		log.Errorf(ctx, "Could not dial LDAP url : @{LdapURL}", dto.Props{"LdapURL": ldapURL})
 		return err
 	}
 	defer l.Close()
 
 	// Reconnect with TLS
-	if ldapConfig.Result.Tls == enum.LdapConfigEnabled {
+	if ldapConfig.Result.Protocol == enum.LDAPTLS {
 		err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
 		if err != nil {
+			log.Errorf(ctx, "Could not activate TLS for @{LdapURL}", dto.Props{"LdapURL": ldapURL})
 			return err
 		}
 	}
@@ -127,14 +140,16 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 	// First Bind with read only user
 	err = l.Bind(ldapConfig.Result.BindUsername, ldapConfig.Result.BindPassword)
 	if err != nil {
+		log.Errorf(ctx, "Could not bind with @{Username} for @{LdapURL}", dto.Props{"Username": ldapConfig.Result.BindUsername, "LdapURL": ldapURL})
 		return err
 	}
 
 	// Search for given username
 	var filter = "(&" + ldapConfig.Result.UserSearchFilter + "(" + ldapConfig.Result.UsernameLdapAttribute + "=" + q.Username + "))"
+	fmt.Println(filter)
 	searchRequest := ldap.NewSearchRequest(
 		ldapConfig.Result.RootDN,
-		ldapConfig.Result.Scope, ldap.NeverDerefAliases, 0, 0, false,
+		(ldapConfig.Result.Scope - 1), ldap.NeverDerefAliases, 0, 0, false,
 		filter,
 		[]string{"dn"},
 		nil,
@@ -142,14 +157,13 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 
 	sr, err := l.Search(searchRequest)
 	if err != nil {
+		log.Errorf(ctx, "Could not search ldap with @{Filter}", dto.Props{"Filter": filter})
 		return err
 	}
 
 	// Verify search results
 	if len(sr.Entries) != 1 {
-		fmt.Println("User does not exist or too many entries returned")
-		fmt.Println(filter)
-		fmt.Println(sr)
+		log.Errorf(ctx, "@{Length} user found with @{Filter}", dto.Props{"Length": sr.Entries, "Filter": filter})
 		return errors.New("User not found")
 	}
 
@@ -159,19 +173,20 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 	// Bind as user to verify their password
 	err = l.Bind(userDN, q.Password)
 	if err != nil {
-		fmt.Println("Cannot bind with client username and password")
+		log.Errorf(ctx, "Could not bind with @{User}", dto.Props{"User": userDN})
 		return err
 	}
 
 	// Rebind with read only user
 	err = l.Bind(ldapConfig.Result.BindUsername, ldapConfig.Result.BindPassword)
 	if err != nil {
+		log.Errorf(ctx, "Could not bind with @{Username} for @{LdapURL}", dto.Props{"Username": ldapConfig.Result.BindUsername, "LdapURL": ldapURL})
 		return err
 	}
 
 	searchRequest2 := ldap.NewSearchRequest(
 		ldapConfig.Result.RootDN,
-		ldapConfig.Result.Scope, ldap.NeverDerefAliases, 0, 0, false,
+		(ldapConfig.Result.Scope - 1), ldap.NeverDerefAliases, 0, 0, false,
 		filter,
 		[]string{ldapConfig.Result.MailLdapAttribute, ldapConfig.Result.NameLdapAttribute, ldapConfig.Result.UsernameLdapAttribute},
 		nil,
@@ -179,11 +194,12 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 
 	sr2, err2 := l.Search(searchRequest2)
 	if err2 != nil {
+		log.Errorf(ctx, "Could not search ldap with @{Filter}", dto.Props{"Filter": filter})
 		return err
 	}
 
 	if len(sr2.Entries) != 1 {
-		log.Fatal("Missing attributes")
+		log.Errorf(ctx, "@{Length} user found with @{Filter}", dto.Props{"Length": sr.Entries, "Filter": filter})
 		return errors.New("User not found")
 	}
 
