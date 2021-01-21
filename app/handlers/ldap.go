@@ -29,6 +29,8 @@ func SignInByLdap() web.HandlerFunc {
 		// Get user profile from LDAP server
 		ldapUser := &query.GetLdapProfile{Provider: provider, Username: input.Model.Username, Password: input.Model.Password}
 		if err := bus.Dispatch(c, ldapUser); err != nil {
+			// Password must no appear anywhere in the logs
+			c.Request.Body = "{\"username\":" + "\"" + input.Model.Username + "\"}"
 			return c.Failure(err)
 		}
 
@@ -38,14 +40,15 @@ func SignInByLdap() web.HandlerFunc {
 		err := bus.Dispatch(c, userByProvider)
 		user = userByProvider.Result
 
-		// If it doesn't we look for an existing user with the email adress obtained from LDAP
+		// If the user is not already registered
+		// we look for an existing user with the email adress obtained from LDAP
 		if errors.Cause(err) == app.ErrNotFound && ldapUser.Result.Email != "" {
 			userByEmail := &query.GetUserByEmail{Email: ldapUser.Result.Email}
 			err = bus.Dispatch(c, userByEmail)
 			user = userByEmail.Result
 		}
 
-		// If the userbyProvider search has failed
+		// If the GetUserByEmail search has failed
 		if err != nil {
 
 			// And than no user was found
@@ -72,6 +75,8 @@ func SignInByLdap() web.HandlerFunc {
 
 				// And insert it into the database
 				if err = bus.Dispatch(c, &cmd.RegisterUser{User: user}); err != nil {
+					// Password must no appear anywhere in the logs
+					c.Request.Body = "{\"username\":" + "\"" + input.Model.Username + "\"}"
 					return c.Failure(err)
 				}
 
@@ -84,6 +89,8 @@ func SignInByLdap() web.HandlerFunc {
 				ProviderName: provider,
 				ProviderUID:  ldapUser.Result.ID,
 			}); err != nil {
+				// Password must no appear anywhere in the logs
+				c.Request.Body = "{\"username\":" + "\"" + input.Model.Username + "\"}"
 				return c.Failure(err)
 			}
 
