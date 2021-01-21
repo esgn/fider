@@ -34,6 +34,10 @@ func TestRenderer_Basic(t *testing.T) {
 		return nil
 	})
 
+	bus.AddHandler(func(ctx context.Context, q *query.ListActiveLdapProviders) error {
+		return nil
+	})
+
 	buf := new(bytes.Buffer)
 	ctx := newGetContext("https://demo.test.fider.io:3000/", nil)
 	renderer := web.NewRenderer(&models.SystemSettings{})
@@ -48,6 +52,10 @@ func TestRenderer_WithChunkPreload(t *testing.T) {
 		return nil
 	})
 
+	bus.AddHandler(func(ctx context.Context, q *query.ListActiveLdapProviders) error {
+		return nil
+	})
+
 	buf := new(bytes.Buffer)
 	ctx := newGetContext("https://demo.test.fider.io:3000/", nil)
 	renderer := web.NewRenderer(&models.SystemSettings{})
@@ -59,6 +67,10 @@ func TestRenderer_Tenant(t *testing.T) {
 	RegisterT(t)
 
 	bus.AddHandler(func(ctx context.Context, q *query.ListActiveOAuthProviders) error {
+		return nil
+	})
+
+	bus.AddHandler(func(ctx context.Context, q *query.ListActiveLdapProviders) error {
 		return nil
 	})
 
@@ -77,6 +89,10 @@ func TestRenderer_WithCanonicalURL(t *testing.T) {
 		return nil
 	})
 
+	bus.AddHandler(func(ctx context.Context, q *query.ListActiveLdapProviders) error {
+		return nil
+	})
+
 	buf := new(bytes.Buffer)
 	ctx := newGetContext("https://demo.test.fider.io:3000/", nil)
 	ctx.SetCanonicalURL("http://feedback.demo.org")
@@ -89,6 +105,10 @@ func TestRenderer_Props(t *testing.T) {
 	RegisterT(t)
 
 	bus.AddHandler(func(ctx context.Context, q *query.ListActiveOAuthProviders) error {
+		return nil
+	})
+
+	bus.AddHandler(func(ctx context.Context, q *query.ListActiveLdapProviders) error {
 		return nil
 	})
 
@@ -118,6 +138,10 @@ func TestRenderer_AuthenticatedUser(t *testing.T) {
 		return nil
 	})
 
+	bus.AddHandler(func(ctx context.Context, q *query.ListActiveLdapProviders) error {
+		return nil
+	})
+
 	buf := new(bytes.Buffer)
 	ctx := newGetContext("https://demo.test.fider.io:3000/", nil)
 	ctx.SetUser(&models.User{
@@ -140,6 +164,10 @@ func TestRenderer_AuthenticatedUser(t *testing.T) {
 
 func TestRenderer_WithOAuth(t *testing.T) {
 	RegisterT(t)
+
+	bus.AddHandler(func(ctx context.Context, q *query.ListActiveLdapProviders) error {
+		return nil
+	})
 
 	bus.AddHandler(func(ctx context.Context, q *query.ListActiveOAuthProviders) error {
 		q.Result = []*dto.OAuthProviderOption{

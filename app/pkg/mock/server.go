@@ -24,7 +24,12 @@ type Server struct {
 }
 
 func createServer() *Server {
+
 	bus.AddHandler(func(ctx context.Context, q *query.ListActiveOAuthProviders) error {
+		return nil
+	})
+
+	bus.AddHandler(func(ctx context.Context, q *query.ListActiveLdapProviders) error {
 		return nil
 	})
 

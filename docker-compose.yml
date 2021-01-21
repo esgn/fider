@@ -47,7 +47,7 @@ services:
   pgtest:
     container_name: fider_pgtest
     restart: always
-    image: postgres:9.6.8
+    image: postgres:11.5
     ports:
       - "5566:5432"
     environment:
