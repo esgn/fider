@@ -14,13 +14,13 @@ import (
 	"github.com/getfider/fider/app/pkg/validate"
 )
 
-// check if string is an integer
+// Verify if string is an integer
 func IsInteger(s string) bool {
 	_, err := strconv.Atoi(s)
 	return err == nil
 }
 
-// CreateEditLdapConfig is used to create/edit Ldap config
+// CreateEditLdapConfig is used to create/edit LDAP configuration
 type CreateEditLdapConfig struct {
 	Model *models.CreateEditLdapConfig
 }
@@ -79,15 +79,15 @@ func (input *CreateEditLdapConfig) Validate(ctx context.Context, user *models.Us
 	}
 
 	if input.Model.LdapDomain == "" {
-		result.AddFieldFailure("ldapDomain", "Ldap Domain is required.")
-	} else if len(input.Model.LdapDomain) > 100 {
-		result.AddFieldFailure("ldapDomain", "LDAP Domain must have less than 100 characters.")
+		result.AddFieldFailure("ldapDomain", "LDAP Domain is required.")
+	} else if len(input.Model.LdapDomain) > 300 {
+		result.AddFieldFailure("ldapDomain", "LDAP Domain must have less than 300 characters.")
 	}
 
 	if input.Model.LdapPort == "" {
 		result.AddFieldFailure("ldapPort", "LDAP port is required.")
 	} else if len(input.Model.LdapPort) > 10 {
-		result.AddFieldFailure("ldapPort", "LDAP port must have less than 500 characters.")
+		result.AddFieldFailure("ldapPort", "LDAP port must be less than 10 digits.")
 	} else if !IsInteger(input.Model.LdapPort) {
 		result.AddFieldFailure("ldapPort", "LDAP must be an integer")
 	}
@@ -106,14 +106,14 @@ func (input *CreateEditLdapConfig) Validate(ctx context.Context, user *models.Us
 
 	if input.Model.RootDN == "" {
 		result.AddFieldFailure("rootDN", "Root DN is required.")
-	} else if len(input.Model.RootDN) > 100 {
-		result.AddFieldFailure("rootDN", "Root DN must have less than 100 characters.")
+	} else if len(input.Model.RootDN) > 250 {
+		result.AddFieldFailure("rootDN", "Root DN must have less than 250 characters.")
 	}
 
 	if input.Model.UserSearchFilter == "" {
 		result.AddFieldFailure("userSearchFilter", "User Search Filter is required.")
-	} else if len(input.Model.UserSearchFilter) > 100 {
-		result.AddFieldFailure("userSearchFilter", "User Search Filter must have less than 100 characters.")
+	} else if len(input.Model.UserSearchFilter) > 500 {
+		result.AddFieldFailure("userSearchFilter", "User Search Filter must have less than 500 characters.")
 	}
 
 	if input.Model.UsernameLdapAttribute == "" {
@@ -131,7 +131,7 @@ func (input *CreateEditLdapConfig) Validate(ctx context.Context, user *models.Us
 	if input.Model.MailLdapAttribute == "" {
 		result.AddFieldFailure("mailLdapAttribute", "Mail LDAP attribute is required.")
 	} else if len(input.Model.MailLdapAttribute) > 100 {
-		result.AddFieldFailure("mailLdapAttribute", "Username LDAP attribute must have less than 100 characters.")
+		result.AddFieldFailure("mailLdapAttribute", "Mail LDAP attribute must have less than 100 characters.")
 	}
 
 	return result

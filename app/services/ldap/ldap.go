@@ -3,14 +3,10 @@ package ldap
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"strings"
 
 	ldap "github.com/go-ldap/ldap"
 
-	//"strings"
-
-	//"github.com/getfider/fider/app"
 	"github.com/getfider/fider/app/models"
 	"github.com/getfider/fider/app/models/cmd"
 	"github.com/getfider/fider/app/models/dto"
@@ -19,8 +15,6 @@ import (
 	"github.com/getfider/fider/app/pkg/bus"
 	"github.com/getfider/fider/app/pkg/errors"
 	"github.com/getfider/fider/app/pkg/log"
-	//"github.com/getfider/fider/app/pkg/jsonq"
-	//"github.com/getfider/fider/app/pkg/validate"
 )
 
 func init() {
@@ -42,10 +36,6 @@ func (s Service) Enabled() bool {
 }
 
 func (s Service) Init() {
-	//bus.AddHandler(parseLdapRawProfile)
-	//bus.AddHandler(getOAuthAuthorizationURL)
-	//bus.AddHandler(getOAuthProfile)
-	//bus.AddHandler(getOAuthRawProfile)
 	bus.AddHandler(getLdapProfile)
 	bus.AddHandler(listActiveLdapProviders)
 	bus.AddHandler(listAllLdapProviders)
@@ -59,8 +49,11 @@ func getProviderStatus(key string) int {
 	return enum.LdapConfigEnabled
 }
 
+/* testLdapServer test if LDAP server can be accessed by the read only user */
+
 func testLdapServer(ctx context.Context, c *cmd.TestLdapServer) error {
 
+	// Get LDAP provider configuration from database
 	ldapConfig := &query.GetCustomLdapConfigByProvider{Provider: c.Provider}
 	err := bus.Dispatch(ctx, ldapConfig)
 	if err != nil {
@@ -68,10 +61,12 @@ func testLdapServer(ctx context.Context, c *cmd.TestLdapServer) error {
 		return err
 	}
 
+	// Get protocol from LDAP provider configuration
 	protocol := "ldap://"
 	if ldapConfig.Result.Protocol == enum.LDAPS {
 		protocol = "ldaps://"
 	}
+
 	ldapURL := protocol + ldapConfig.Result.LdapDomain + ":" + ldapConfig.Result.LdapPort
 
 	// Connect to LDAP
@@ -82,7 +77,7 @@ func testLdapServer(ctx context.Context, c *cmd.TestLdapServer) error {
 	}
 	defer l.Close()
 
-	// Reconnect with TLS
+	// Reconnect with TLS if necessary
 	if ldapConfig.Result.Protocol == enum.LDAPTLS {
 		err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
 		if err != nil {
@@ -101,12 +96,11 @@ func testLdapServer(ctx context.Context, c *cmd.TestLdapServer) error {
 	return nil
 }
 
-// getLdapProfile is the main method implementing LDAD authentication
+/* getLdapProfile is the main method implementing LDAD authentication */
 
 func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 
-	// authentify user against ldap and get user profile
-
+	// Get LDAP provider configuration from database
 	ldapConfig := &query.GetCustomLdapConfigByProvider{Provider: q.Provider}
 	err := bus.Dispatch(ctx, ldapConfig)
 	if err != nil {
@@ -114,6 +108,7 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 		return err
 	}
 
+	// Get protocol from LDAP provider configuration
 	protocol := "ldap://"
 	if ldapConfig.Result.Protocol == enum.LDAPS {
 		protocol = "ldaps://"
@@ -146,7 +141,6 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 
 	// Search for given username
 	var filter = "(&" + ldapConfig.Result.UserSearchFilter + "(" + ldapConfig.Result.UsernameLdapAttribute + "=" + q.Username + "))"
-	fmt.Println(filter)
 	searchRequest := ldap.NewSearchRequest(
 		ldapConfig.Result.RootDN,
 		(ldapConfig.Result.Scope - 1), ldap.NeverDerefAliases, 0, 0, false,
@@ -167,7 +161,7 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 		return errors.New("User not found")
 	}
 
-	// Get dn of the user to be tested
+	// Get DN of the user to be tested
 	userDN := sr.Entries[0].DN
 
 	// Bind as user to verify their password
@@ -184,6 +178,7 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 		return err
 	}
 
+	// Search for user id, name and email
 	searchRequest2 := ldap.NewSearchRequest(
 		ldapConfig.Result.RootDN,
 		(ldapConfig.Result.Scope - 1), ldap.NeverDerefAliases, 0, 0, false,
@@ -198,11 +193,13 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 		return err
 	}
 
+	// Verify search results
 	if len(sr2.Entries) != 1 {
 		log.Errorf(ctx, "@{Length} user found with @{Filter}", dto.Props{"Length": sr.Entries, "Filter": filter})
 		return errors.New("User not found")
 	}
 
+	// Create user profile
 	profile := &dto.LdapUserProfile{
 		ID:    strings.TrimSpace(sr2.Entries[0].GetAttributeValue(ldapConfig.Result.UsernameLdapAttribute)),
 		Name:  strings.TrimSpace(sr2.Entries[0].GetAttributeValue(ldapConfig.Result.NameLdapAttribute)),
@@ -213,6 +210,8 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 
 	return nil
 }
+
+/* listActiveLdapProviders returns a list of enabled LDAP providers */
 
 func listActiveLdapProviders(ctx context.Context, q *query.ListActiveLdapProviders) error {
 	allLdapProviders := &query.ListAllLdapProviders{}
@@ -231,6 +230,8 @@ func listActiveLdapProviders(ctx context.Context, q *query.ListActiveLdapProvide
 	return nil
 }
 
+/* listAllLdapProviders returns a list of all LDAP providers */
+
 func listAllLdapProviders(ctx context.Context, q *query.ListAllLdapProviders) error {
 	ldapProviders := &query.ListCustomLdapConfig{}
 	err := bus.Dispatch(ctx, ldapProviders)
@@ -239,8 +240,6 @@ func listAllLdapProviders(ctx context.Context, q *query.ListAllLdapProviders) er
 	}
 
 	list := make([]*dto.LdapProviderOption, 0)
-
-	//ldapBaseURL := web.OAuthBaseURL(ctx)
 
 	for _, p := range ldapProviders.Result {
 		list = append(list, &dto.LdapProviderOption{
@@ -254,6 +253,8 @@ func listAllLdapProviders(ctx context.Context, q *query.ListAllLdapProviders) er
 	return nil
 }
 
+/* getConfig returns the properties of a given LDAP provider */
+
 func getConfig(ctx context.Context, provider string) (*models.LdapConfig, error) {
 
 	getCustomLdap := &query.GetCustomLdapConfigByProvider{Provider: provider}
@@ -264,136 +265,3 @@ func getConfig(ctx context.Context, provider string) (*models.LdapConfig, error)
 
 	return getCustomLdap.Result, nil
 }
-
-/*func parseLdapRawProfile(ctx context.Context, c *cmd.ParseLdapRawProfile) error {
-	config, err := getConfig(ctx, c.Provider)
-	if err != nil {
-		return err
-	}
-
-	query := jsonq.New(c.Body)
-	profile := &dto.LdapUserProfile{
-		ID:    strings.TrimSpace(query.String(config.JSONUserIDPath)),
-		Name:  strings.TrimSpace(query.String(config.JSONUserNamePath)),
-		Email: strings.ToLower(strings.TrimSpace(query.String(config.JSONUserEmailPath))),
-	}
-
-	if profile.ID == "" {
-		return app.ErrUserIDRequired
-	}
-
-	if profile.Name == "" && profile.Email != "" {
-		parts := strings.Split(profile.Email, "@")
-		profile.Name = parts[0]
-	}
-
-	if profile.Name == "" {
-		profile.Name = "Anonymous"
-	}
-
-	if len(validate.Email(profile.Email)) != 0 {
-		profile.Email = ""
-	}
-
-	c.Result = profile
-	return nil
-}*/
-
-/*func getOAuthAuthorizationURL(ctx context.Context, q *query.GetOAuthAuthorizationURL) error {
-	config, err := getConfig(ctx, q.Provider)
-	if err != nil {
-		return err
-	}
-
-	oauthBaseURL := web.OAuthBaseURL(ctx)
-	authURL, _ := url.Parse(config.AuthorizeURL)
-	parameters := url.Values{}
-	parameters.Add("client_id", config.ClientID)
-	parameters.Add("scope", config.Scope)
-	parameters.Add("redirect_uri", fmt.Sprintf("%s/oauth/%s/callback", oauthBaseURL, q.Provider))
-	parameters.Add("response_type", "code")
-	parameters.Add("state", q.Redirect+"|"+q.Identifier)
-	authURL.RawQuery = parameters.Encode()
-	q.Result = authURL.String()
-	return nil
-}
-
-func getOAuthProfile(ctx context.Context, q *query.GetOAuthProfile) error {
-	config, err := getConfig(ctx, q.Provider)
-	if err != nil {
-		return err
-	}
-
-	if config.Status == enum.OAuthConfigDisabled {
-		return errors.New("Provider %s is disabled", q.Provider)
-	}
-
-	rawProfile := &query.GetOAuthRawProfile{Provider: q.Provider, Code: q.Code}
-	err = bus.Dispatch(ctx, rawProfile)
-	if err != nil {
-		return err
-	}
-
-	parseRawProfile := &cmd.ParseOAuthRawProfile{Provider: q.Provider, Body: rawProfile.Result}
-	err = bus.Dispatch(ctx, parseRawProfile)
-	if err != nil {
-		return err
-	}
-
-	q.Result = parseRawProfile.Result
-	return nil
-}
-
-func getOAuthRawProfile(ctx context.Context, q *query.GetOAuthRawProfile) error {
-	config, err := getConfig(ctx, q.Provider)
-	if err != nil {
-		return err
-	}
-
-	oauthBaseURL := web.OAuthBaseURL(ctx)
-	exchange := (&oauth2.Config{
-		ClientID:     config.ClientID,
-		ClientSecret: config.ClientSecret,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  config.AuthorizeURL,
-			TokenURL: config.TokenURL,
-		},
-		RedirectURL: fmt.Sprintf("%s/oauth/%s/callback", oauthBaseURL, q.Provider),
-	}).Exchange
-
-	oauthToken, err := exchange(ctx, q.Code)
-	if err != nil {
-		return err
-	}
-
-	if config.ProfileURL == "" {
-		parts := strings.Split(oauthToken.AccessToken, ".")
-		if len(parts) != 3 {
-			return errors.New("AccessToken is not JWT")
-		}
-
-		body, _ := jwt.DecodeSegment(parts[1])
-		q.Result = string(body)
-		return nil
-	}
-
-	req := &cmd.HTTPRequest{
-		URL:    config.ProfileURL,
-		Method: "GET",
-		Headers: map[string]string{
-			"Authorization": "Bearer " + oauthToken.AccessToken,
-		},
-	}
-
-	if err := bus.Dispatch(ctx, req); err != nil {
-		return err
-	}
-
-	if req.ResponseStatusCode != 200 {
-		return errors.New("Failed to request profile. Status Code: %d. Body: %s", req.ResponseStatusCode, string(req.ResponseBody))
-	}
-
-	q.Result = string(req.ResponseBody)
-	return nil
-}
-*/

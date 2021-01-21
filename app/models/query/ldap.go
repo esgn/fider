@@ -15,27 +15,12 @@ type ListCustomLdapConfig struct {
 	Result []*models.LdapConfig
 }
 
-type GetLdapAuthorizationURL struct {
-	Provider   string
-	Redirect   string
-	Identifier string
-
-	Result string
-}
-
 type GetLdapProfile struct {
 	Provider string
 	Username string
 	Password string
 
 	Result *dto.LdapUserProfile
-}
-
-type GetLdapRawProfile struct {
-	Provider string
-	Code     string
-
-	Result string
 }
 
 type ListActiveLdapProviders struct {

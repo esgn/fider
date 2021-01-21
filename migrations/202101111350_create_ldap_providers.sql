@@ -1,7 +1,6 @@
 create table if not exists ldap_providers (
   id                       serial not null, 
   tenant_id                int not null,
-  -- the strange identifier that will be indexed by user_providers
   provider                 varchar(30) not null,
   display_name             varchar(50) not null,
   status                   int not null,
@@ -9,7 +8,7 @@ create table if not exists ldap_providers (
   ldap_port                int not null,
   bind_username            varchar(100) not null,
   bind_password            varchar(100) not null,
-  root_dn                  varchar(100) not null,
+  root_dn                  varchar(250) not null,
   scope                    int not null,
   user_search_filter       varchar(500) not null,
   username_ldap_attribute  varchar(100) not null,

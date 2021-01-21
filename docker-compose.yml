@@ -24,7 +24,7 @@ services:
       - "8765:80"
     environment:
       - PHP_PG_ADMIN_SERVER_PORT=5432
-      - PHP_PG_ADMIN_SERVER_HOST=pgdev
+      - PHP_PG_ADMIN_SERVER_HOST=pg_ign_replica
       - PHP_PG_ADMIN_SERVER_DEFAULT_DB=fider
 
   openldap:
@@ -44,15 +44,16 @@ services:
     volumes:
       - "./bootstrap.ldif:/container/service/slapd/assets/config/bootstrap/ldif/50-bootstrap.ldif"
 
-#  pgtest:
-#    container_name: fider_pgtest
-#    restart: always
-#    image: postgres:9.6.8
-#    ports:
-#      - "5566:5432"
-#    environment:
-#      POSTGRES_USER: fider_test
-#      POSTGRES_PASSWORD: fider_test_pw
+  pgtest:
+    container_name: fider_pgtest
+    restart: always
+    image: postgres:9.6.8
+    ports:
+      - "5566:5432"
+    environment:
+      POSTGRES_USER: fider_test
+      POSTGRES_PASSWORD: fider_test_pw
+
 #  s3test:
 #    container_name: fider_s3test
 #    restart: always

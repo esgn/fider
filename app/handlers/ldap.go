@@ -13,25 +13,26 @@ import (
 	webutil "github.com/getfider/fider/app/pkg/web/util"
 )
 
-// SignInByLdap comment
+/* SignInByLdap allows user to sign in using a LDAP provider */
+
 func SignInByLdap() web.HandlerFunc {
 	return func(c *web.Context) error {
 
 		provider := c.Param("provider")
 
-		// Input validation : Username and password present ?
+		// Input validation : Are username and password present ?
 		input := new(actions.SignInWithLdap)
 		if result := c.BindTo(input); !result.Ok {
 			return c.HandleValidation(result)
 		}
 
-		// Get user profile from Ldap
+		// Get user profile from LDAP server
 		ldapUser := &query.GetLdapProfile{Provider: provider, Username: input.Model.Username, Password: input.Model.Password}
 		if err := bus.Dispatch(c, ldapUser); err != nil {
 			return c.Failure(err)
 		}
 
-		// Is the already registered with the current provider ?
+		// Is the already registered with the current LDAP provider ?
 		var user *models.User
 		userByProvider := &query.GetUserByProvider{Provider: provider, UID: ldapUser.Result.ID}
 		err := bus.Dispatch(c, userByProvider)
@@ -75,7 +76,7 @@ func SignInByLdap() web.HandlerFunc {
 				}
 
 			}
-			// If no error was returned but the user is missing a provider
+			// If no error was returned but the user is still missing a provider
 		} else if !user.HasProvider(provider) {
 
 			if err = bus.Dispatch(c, &cmd.RegisterUserProvider{
@@ -88,6 +89,7 @@ func SignInByLdap() web.HandlerFunc {
 
 		}
 
+		// Add auth cookie
 		webutil.AddAuthUserCookie(c, user)
 
 		return c.Ok(web.Map{})
