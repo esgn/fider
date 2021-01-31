@@ -71,14 +71,13 @@ export const SignInControl: React.FunctionComponent<SignInControlProps> = props 
             <Form error={ldapError}>
               <Input field="ldapUsername"
                             value={username}
-                            label="LDAP Username"
+                            label="Log in with your LDAP account"
                             placeholder="LDAP username"
                             onChange={setUsername}
                             ></Input>
 
               <Input field="ldapPassword"
                             value={password}
-                            label="LDAP Password"
                             placeholder="LDAP password"
                             onChange={setPassword}
                             password={true}

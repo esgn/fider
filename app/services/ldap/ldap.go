@@ -104,7 +104,7 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 	ldapConfig := &query.GetCustomLdapConfigByProvider{Provider: q.Provider}
 	err := bus.Dispatch(ctx, ldapConfig)
 	if err != nil {
-		log.Errorf(ctx, " Could not get LDAP information for @{Provider}", dto.Props{"Provider": q.Provider})
+		log.Errorf(ctx, " Could not get LDAP provider information for @{Provider}", dto.Props{"Provider": q.Provider})
 		return err
 	}
 
@@ -119,7 +119,7 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 	l, err := ldap.DialURL(ldapURL)
 	if err != nil {
 		log.Errorf(ctx, "Could not dial LDAP url : @{LdapURL}", dto.Props{"LdapURL": ldapURL})
-		return err
+		return errors.New("Could not connect to LDAP")
 	}
 	defer l.Close()
 

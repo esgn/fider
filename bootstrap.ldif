@@ -52,4 +52,4 @@ changetype: add
 cn: Maintaners
 objectclass: groupOfUniqueNames
 uniqueMember: uid=maintainer,dc=example,dc=org
-uniqueMember: uid=developer,dc=example,dc=org:
+uniqueMember: uid=developer,dc=example,dc=org

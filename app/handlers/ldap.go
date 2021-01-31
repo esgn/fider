@@ -9,6 +9,7 @@ import (
 	"github.com/getfider/fider/app/models/query"
 	"github.com/getfider/fider/app/pkg/bus"
 	"github.com/getfider/fider/app/pkg/errors"
+	"github.com/getfider/fider/app/pkg/validate"
 	"github.com/getfider/fider/app/pkg/web"
 	webutil "github.com/getfider/fider/app/pkg/web/util"
 )
@@ -20,7 +21,7 @@ func SignInByLdap() web.HandlerFunc {
 
 		provider := c.Param("provider")
 
-		// Input validation : Are username and password present ?
+		// Input validation : Are username and password present in the query ?
 		input := new(actions.SignInWithLdap)
 		if result := c.BindTo(input); !result.Ok {
 			return c.HandleValidation(result)
@@ -29,9 +30,13 @@ func SignInByLdap() web.HandlerFunc {
 		// Get user profile from LDAP server
 		ldapUser := &query.GetLdapProfile{Provider: provider, Username: input.Model.Username, Password: input.Model.Password}
 		if err := bus.Dispatch(c, ldapUser); err != nil {
-			// Password must no appear anywhere in the logs
+			// Final user password must no appear anywhere in the logs
 			c.Request.Body = "{\"username\":" + "\"" + input.Model.Username + "\"}"
-			return c.Failure(err)
+			e := validate.Error(err)
+			e.AddFieldFailure("ldapPassword", "User unknown")
+			return c.BadRequest(web.Map{
+				"errors": e.Errors,
+			})
 		}
 
 		// Is the already registered with the current LDAP provider ?
