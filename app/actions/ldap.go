@@ -78,10 +78,10 @@ func (input *CreateEditLdapConfig) Validate(ctx context.Context, user *models.Us
 		result.AddFieldFailure("displayName", "Display Name must have less than 50 characters.")
 	}
 
-	if input.Model.LdapDomain == "" {
-		result.AddFieldFailure("ldapDomain", "LDAP Domain is required.")
-	} else if len(input.Model.LdapDomain) > 300 {
-		result.AddFieldFailure("ldapDomain", "LDAP Domain must have less than 300 characters.")
+	if input.Model.LdapHostname == "" {
+		result.AddFieldFailure("ldapHostname", "LDAP Domain is required.")
+	} else if len(input.Model.LdapHostname) > 300 {
+		result.AddFieldFailure("ldapHostname", "LDAP Domain must have less than 300 characters.")
 	}
 
 	if input.Model.LdapPort == "" {

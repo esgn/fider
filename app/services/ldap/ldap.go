@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"strings"
+	"time"
 
 	ldap "github.com/go-ldap/ldap"
 
@@ -67,10 +68,13 @@ func testLdapServer(ctx context.Context, c *cmd.TestLdapServer) error {
 		protocol = "ldaps://"
 	}
 
-	ldapURL := protocol + ldapConfig.Result.LdapDomain + ":" + ldapConfig.Result.LdapPort
+	ldapURL := protocol + ldapConfig.Result.LdapHostname + ":" + ldapConfig.Result.LdapPort
 
 	// Connect to LDAP
+	// TODO : Handle timeout properly
+	// Should be done via
 	l, err := ldap.DialURL(ldapURL)
+	l.SetTimeout(3 * time.Second)
 	if err != nil {
 		log.Errorf(ctx, "Could not dial LDAP url : @{LdapURL}", dto.Props{"LdapURL": ldapURL})
 		return err
@@ -113,7 +117,7 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 	if ldapConfig.Result.Protocol == enum.LDAPS {
 		protocol = "ldaps://"
 	}
-	ldapURL := protocol + ldapConfig.Result.LdapDomain + ":" + ldapConfig.Result.LdapPort
+	ldapURL := protocol + ldapConfig.Result.LdapHostname + ":" + ldapConfig.Result.LdapPort
 
 	// Connect to LDAP
 	l, err := ldap.DialURL(ldapURL)

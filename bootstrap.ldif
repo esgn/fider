@@ -1,55 +1,55 @@
 dn: uid=developer,dc=example,dc=org
 changetype: add
-objectclass: inetOrgPerson
+objectClass: inetOrgPerson
 cn: developer
-givenname: developer
+givenName: developer
 sn: Developer
-displayname: Developer User
+displayName: Developer User
 mail: developer@example.org
-userpassword: password
+userPassword: password
 uid: developer
 
 dn: uid=maintainer,dc=example,dc=org
 changetype: add
-objectclass: inetOrgPerson
+objectClass: inetOrgPerson
 cn: maintainer
-givenname: maintainer
+givenName: maintainer
 sn: Maintainer
-displayname: Maintainer User
+displayName: Maintainer User
 mail: maintainer@example.org
-userpassword: password
+userPassword: password
 uid: maintainer
 
 dn: uid=administrator,dc=example,dc=org
 changetype: add
-objectclass: inetOrgPerson
+objectClass: inetOrgPerson
 cn: administrator
-givenname: administrator
+givenName: administrator
 sn: administrator
-displayname: Administrator User
+displayName: Administrator User
 mail: administrator@example.org
-userpassword: password
+userPassword: password
 uid: administrator
 
 dn: ou=Groups,dc=example,dc=org
 changetype: add
-objectclass: organizationalUnit
+objectClass: organizationalUnit
 ou: Groups
 
 dn: ou=Users,dc=example,dc=org
 changetype: add
-objectclass: organizationalUnit
+objectClass: organizationalUnit
 ou: Users
 
 dn: cn=Admins,ou=Groups,dc=example,dc=org
 changetype: add
 cn: Admins
-objectclass: groupOfUniqueNames
+objectClass: groupOfUniqueNames
 uniqueMember: uid=administrator,dc=example,dc=org
 
-dn: cn=Maintaners,ou=Groups,dc=example,dc=org
+dn: cn=Maintainers,ou=Groups,dc=example,dc=org
 changetype: add
-cn: Maintaners
-objectclass: groupOfUniqueNames
+cn: Maintainers
+objectClass: groupOfUniqueNames
 uniqueMember: uid=maintainer,dc=example,dc=org
 uniqueMember: uid=developer,dc=example,dc=org

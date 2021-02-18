@@ -82,7 +82,7 @@ export interface LdapConfig {
   displayName: string;
   status: number;
   protocol: number;
-  ldapDomain: string;
+  ldapHostname: string;
   ldapPort: string;
   bindUsername: string;
   bindPassword: string;

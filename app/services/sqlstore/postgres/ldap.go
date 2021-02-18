@@ -19,7 +19,7 @@ type dbLdapConfig struct {
 	DisplayName           string `db:"display_name"`
 	Status                int    `db:"status"`
 	Protocol              int    `db:"protocol"`
-	LdapDomain            string `db:"ldap_domain"`
+	LdapHostname          string `db:"ldap_hostname"`
 	Port                  int    `db:"ldap_port"`
 	BindUsername          string `db:"bind_username"`
 	BindPassword          string `db:"bind_password"`
@@ -38,7 +38,7 @@ func (m *dbLdapConfig) toModel() *models.LdapConfig {
 		DisplayName:           m.DisplayName,
 		Status:                m.Status,
 		Protocol:              m.Protocol,
-		LdapDomain:            m.LdapDomain,
+		LdapHostname:          m.LdapHostname,
 		LdapPort:              strconv.Itoa(m.Port),
 		BindUsername:          m.BindUsername,
 		BindPassword:          m.BindPassword,
@@ -60,7 +60,7 @@ func getCustomLdapConfigByProvider(ctx context.Context, q *query.GetCustomLdapCo
 		config := &dbLdapConfig{}
 		err := trx.Get(config, `
 		SELECT id, provider, display_name, status,
-					ldap_domain, ldap_port, 
+					ldap_hostname, ldap_port, 
 					bind_username, bind_password, root_dn,
 					scope, user_search_filter, username_ldap_attribute, name_ldap_attribute, mail_ldap_attribute, protocol
 		FROM ldap_providers
@@ -82,7 +82,7 @@ func listCustomLdapConfig(ctx context.Context, q *query.ListCustomLdapConfig) er
 		if tenant != nil {
 			err := trx.Select(&configs, `
 			SELECT id, provider, display_name, status,
-						ldap_domain, ldap_port, 
+						 ldap_hostname, ldap_port, 
 						 bind_username, bind_password, root_dn,
 						 scope, user_search_filter, username_ldap_attribute, protocol
 			FROM ldap_providers
@@ -108,14 +108,14 @@ func saveCustomLdapConfig(ctx context.Context, c *cmd.SaveCustomLdapConfig) erro
 		if c.Config.ID == 0 {
 			query := `INSERT INTO ldap_providers (
 				tenant_id, provider, display_name, status,
-				ldap_domain, ldap_port, bind_username,
+				ldap_hostname, ldap_port, bind_username,
 				bind_password, root_dn, scope, user_search_filter,
 				username_ldap_attribute, name_ldap_attribute, mail_ldap_attribute, protocol
 			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 			RETURNING id`
 
 			err = trx.Get(&c.Config.ID, query, tenant.ID, c.Config.Provider,
-				c.Config.DisplayName, c.Config.Status, c.Config.LdapDomain, c.Config.LdapPort,
+				c.Config.DisplayName, c.Config.Status, c.Config.LdapHostname, c.Config.LdapPort,
 				c.Config.BindUsername, c.Config.BindPassword, c.Config.RootDN,
 				c.Config.Scope, c.Config.UserSearchFilter, c.Config.UsernameLdapAttribute,
 				c.Config.NameLdapAttribute, c.Config.MailLdapAttribute, c.Config.Protocol)
@@ -123,13 +123,13 @@ func saveCustomLdapConfig(ctx context.Context, c *cmd.SaveCustomLdapConfig) erro
 		} else {
 			query := `
 				UPDATE ldap_providers 
-				SET display_name = $3, status = $4, ldap_domain = $5, ldap_port = $6, 
+				SET display_name = $3, status = $4, ldap_hostname = $5, ldap_port = $6, 
 				bind_username = $7, bind_password = $8, root_dn = $9, scope = $10, 
 				user_search_filter = $11, username_ldap_attribute = $12, name_ldap_attribute = $13, mail_ldap_attribute = $14, protocol = $15
 			WHERE tenant_id = $1 AND id = $2`
 
 			_, err = trx.Execute(query, tenant.ID, c.Config.ID,
-				c.Config.DisplayName, c.Config.Status, c.Config.LdapDomain, c.Config.LdapPort,
+				c.Config.DisplayName, c.Config.Status, c.Config.LdapHostname, c.Config.LdapPort,
 				c.Config.BindUsername, c.Config.BindPassword, c.Config.RootDN,
 				c.Config.Scope, c.Config.UserSearchFilter, c.Config.UsernameLdapAttribute,
 				c.Config.NameLdapAttribute, c.Config.MailLdapAttribute, c.Config.Protocol)

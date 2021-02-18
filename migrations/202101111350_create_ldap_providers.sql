@@ -4,7 +4,7 @@ create table if not exists ldap_providers (
   provider                 varchar(30) not null,
   display_name             varchar(50) not null,
   status                   int not null,
-  ldap_domain              varchar(300) not null,
+  ldap_hostname              varchar(300) not null,
   ldap_port                int not null,
   bind_username            varchar(100) not null,
   bind_password            varchar(100) not null,

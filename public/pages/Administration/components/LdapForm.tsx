@@ -21,7 +21,7 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
   const [protocol, setProtocol] = useState((props.config && props.config.protocol) || 1);
   const [scope, setScope] = useState((props.config && props.config.scope) || 3);
 
-  const [ldapDomain, setLdapDomain] = useState((props.config && props.config.ldapDomain) || "");
+  const [ldapHostname, setLdapHostname] = useState((props.config && props.config.ldapHostname) || "");
   const [ldapPort, setLdapPort] = useState((props.config && props.config.ldapPort) || "389");
   const [bindUsername, setBindUsername] = useState((props.config && props.config.bindUsername) || "");
   const [bindPassword, setBindPassword] = useState((props.config && props.config.bindPassword) || "");
@@ -68,7 +68,7 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
       status: enabled ? LdapConfigStatus.Enabled : LdapConfigStatus.Disabled,
       protocol,
       displayName,
-      ldapDomain,
+      ldapHostname,
       ldapPort,
       bindUsername,
       bindPassword: bindPasswordEnabled ? bindPassword : "",
@@ -123,13 +123,13 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
         <p className="info">Changing protocol will update port value with default port</p>
 
         <Input
-          field="ldapDomain"
-          label="LDAP Domain"
+          field="ldapHostname"
+          label="LDAP Hostname"
           maxLength={300}
-          value={ldapDomain}
+          value={ldapHostname}
           disabled={!fider.session.user.isAdministrator}
-          onChange={setLdapDomain}
-          placeholder="example.org"
+          onChange={setLdapHostname}
+          placeholder="localhost"
         />
 
         <Input
@@ -148,7 +148,7 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
           value={bindUsername}
           disabled={!fider.session.user.isAdministrator}
           onChange={setBindUsername}
-          placeholder="read_only_username"
+          placeholder="cn=readonly,dc=example,dc=org"
         />  
 
         <Input
@@ -171,7 +171,7 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
               undefined
             )
           }
-          placeholder="read_only_username_password"
+          placeholder="readonly"
         />
 
         <Input

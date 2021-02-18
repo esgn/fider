@@ -123,7 +123,7 @@ export interface CreateEditLdapConfigRequest {
   displayName: string;
   status: number;
   protocol: number;
-  ldapDomain: string;
+  ldapHostname: string;
   ldapPort: string;
   bindUsername: string;
   bindPassword: string;
