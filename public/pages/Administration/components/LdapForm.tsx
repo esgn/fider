@@ -112,7 +112,6 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
         />
         <p className="info">The name that will be displayed in the login form</p>
 
-
           <Field label="LDAP protocol">
             <DropDown
                 defaultValue={protocol}
@@ -181,7 +180,7 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
           value={rootDN}
           disabled={!fider.session.user.isAdministrator}
           onChange={setRootDN}
-          placeholder="DC=domain,DC=com"
+          placeholder="dc=example,dc=org"
         />
         
         <Field label="Search scope">
@@ -200,7 +199,7 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
           value={userSearchFilter}
           disabled={!fider.session.user.isAdministrator}
           onChange={setUserSearchFilter}
-          placeholder="(objectClass=organizationalPerson)"
+          placeholder="(objectClass=inetOrgPerson)"
         />
 
         <Input
@@ -220,7 +219,7 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
           value={nameLdapAttribute}
           disabled={!fider.session.user.isAdministrator}
           onChange={setNameLdapAttribute}
-          placeholder="name"
+          placeholder="givenName"
         />
 
         <Input

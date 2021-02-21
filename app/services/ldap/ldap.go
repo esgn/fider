@@ -3,10 +3,13 @@ package ldap
 import (
 	"context"
 	"crypto/tls"
+	"net"
 	"strings"
 	"time"
 
-	ldap "github.com/go-ldap/ldap"
+	// We use v3 version of the go-ldap package
+	// Allows defining timeout and ssl behaviour when connecting to ldap
+	ldap "github.com/go-ldap/ldap/v3"
 
 	"github.com/getfider/fider/app/models"
 	"github.com/getfider/fider/app/models/cmd"
@@ -25,11 +28,11 @@ func init() {
 type Service struct{}
 
 func (s Service) Name() string {
-	return "HTTP"
+	return "LDAP"
 }
 
 func (s Service) Category() string {
-	return "Ldap"
+	return "LDAP"
 }
 
 func (s Service) Enabled() bool {
@@ -50,8 +53,10 @@ func getProviderStatus(key string) int {
 	return enum.LdapConfigEnabled
 }
 
-/* testLdapServer test if LDAP server can be accessed by the read only user */
+// Package level default timeout
+var defaultTimeout = 5 * time.Second
 
+/* testLdapServer test if LDAP server can be accessed by the read only user */
 func testLdapServer(ctx context.Context, c *cmd.TestLdapServer) error {
 
 	// Get LDAP provider configuration from database
@@ -70,18 +75,16 @@ func testLdapServer(ctx context.Context, c *cmd.TestLdapServer) error {
 
 	ldapURL := protocol + ldapConfig.Result.LdapHostname + ":" + ldapConfig.Result.LdapPort
 
-	// Connect to LDAP
-	// TODO : Handle timeout properly
-	// Should be done via
-	l, err := ldap.DialURL(ldapURL)
-	l.SetTimeout(3 * time.Second)
+	// Connect to LDAP with short timeout
+	// https://github.com/go-ldap/ldap/issues/310
+	l, err := ldap.DialURL(ldapURL, ldap.DialWithDialer(&net.Dialer{Timeout: defaultTimeout}))
 	if err != nil {
 		log.Errorf(ctx, "Could not dial LDAP url : @{LdapURL}", dto.Props{"LdapURL": ldapURL})
 		return err
 	}
 	defer l.Close()
 
-	// Reconnect with TLS if necessary
+	// Reconnect with ldap+TLS if necessary
 	if ldapConfig.Result.Protocol == enum.LDAPTLS {
 		err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
 		if err != nil {
@@ -119,8 +122,9 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 	}
 	ldapURL := protocol + ldapConfig.Result.LdapHostname + ":" + ldapConfig.Result.LdapPort
 
-	// Connect to LDAP
-	l, err := ldap.DialURL(ldapURL)
+	// Connect to LDAP with short timeout
+	// https://github.com/go-ldap/ldap/issues/310
+	l, err := ldap.DialURL(ldapURL, ldap.DialWithDialer(&net.Dialer{Timeout: defaultTimeout}))
 	if err != nil {
 		log.Errorf(ctx, "Could not dial LDAP url : @{LdapURL}", dto.Props{"LdapURL": ldapURL})
 		return errors.New("Could not connect to LDAP")
@@ -234,7 +238,7 @@ func listActiveLdapProviders(ctx context.Context, q *query.ListActiveLdapProvide
 	return nil
 }
 
-/* listAllLdapProviders returns a list of all LDAP providers */
+/* listAllLdapProviders returns a list of all LDAP providers (disabled or enabled) */
 
 func listAllLdapProviders(ctx context.Context, q *query.ListAllLdapProviders) error {
 	ldapProviders := &query.ListCustomLdapConfig{}

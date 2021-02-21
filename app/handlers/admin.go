@@ -196,14 +196,15 @@ func SaveLdapConfig() web.HandlerFunc {
 	}
 }
 
-// TestLdapServer is used to test an ldap provider
+// TestLdapServer is used to test an LDAP provider
 func TestLdapServer() web.HandlerFunc {
 	return func(c *web.Context) error {
 
 		testLdapServer := &cmd.TestLdapServer{Provider: c.Param("provider")}
 
 		if err := bus.Dispatch(c, testLdapServer); err != nil {
-			return c.Failure(err)
+			//return c.Failure(err)
+			return c.GatewayTimeout()
 		}
 
 		return c.Ok(web.Map{})

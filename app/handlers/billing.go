@@ -30,8 +30,8 @@ func BillingPage() web.HandlerFunc {
 				return c.Failure(err)
 			}
 		}
-
-		paymentInfo := query.GetPaymentInfo{}
+		// FIXED : pointer error in master branch
+		paymentInfo := &query.GetPaymentInfo{}
 		err := bus.Dispatch(c, paymentInfo)
 		if err != nil {
 			return c.Failure(err)

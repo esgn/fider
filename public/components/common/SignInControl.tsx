@@ -83,7 +83,8 @@ export const SignInControl: React.FunctionComponent<SignInControlProps> = props 
                             password={true}
                             ></Input>
 
-              <Field label="LDAP Server">
+              <Field>
+                <span className="m-ldap-dropdown-label">LDAP Server</span>
                 <DropDown
                     items={[
                     ...fider.settings.ldap.map(x => ({ value: x.provider, label: x.displayName }))
@@ -92,6 +93,7 @@ export const SignInControl: React.FunctionComponent<SignInControlProps> = props 
                     placeholder="Select a LDAP provider"
                     onChange={updateLdapProvider}
                     inline={true}
+                    className="m-ldap-dropdown-inline"
                 />
               </Field>
               <Button type="submit" color="positive" disabled={((username === "")||(password === ""))} onClick={ldapSignIn}>

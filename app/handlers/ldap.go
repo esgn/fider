@@ -32,14 +32,15 @@ func SignInByLdap() web.HandlerFunc {
 		if err := bus.Dispatch(c, ldapUser); err != nil {
 			// Final user password must no appear anywhere in the logs
 			c.Request.Body = "{\"username\":" + "\"" + input.Model.Username + "\"}"
+			// TODO : Do something cleaner here
 			e := validate.Error(err)
-			e.AddFieldFailure("ldapPassword", "User unknown")
+			e.AddFieldFailure("ldapPassword", "USER UNKNOWN")
 			return c.BadRequest(web.Map{
 				"errors": e.Errors,
 			})
 		}
 
-		// Is the already registered with the current LDAP provider ?
+		// Is the user already registered with the current LDAP provider ?
 		var user *models.User
 		userByProvider := &query.GetUserByProvider{Provider: provider, UID: ldapUser.Result.ID}
 		err := bus.Dispatch(c, userByProvider)

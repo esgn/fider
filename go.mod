@@ -7,7 +7,7 @@ require (
 	github.com/cosmtrek/air v1.0.2
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-ldap/ldap v3.0.3+incompatible
-	github.com/go-ldap/ldap/v3 v3.2.4 // indirect
+	github.com/go-ldap/ldap/v3 v3.2.4
 	github.com/goenning/imagic v0.0.1
 	github.com/goenning/letteravatar v0.0.0-20180605200324-553181ed4055
 	github.com/goenning/vat v0.1.0

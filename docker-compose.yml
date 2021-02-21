@@ -2,6 +2,7 @@ version: '3'
 
 services:
   smtp:
+    container_name: fider_mailhog
     image: mailhog/mailhog:latest
     ports:
       - "8026:8025"
@@ -12,6 +13,7 @@ services:
     restart: always
     image: postgres:11.5
     volumes:
+      # Not using ./data/postgres anymore for easier cleanup 
       - pg_data:/var/lib/postgresql/data
     ports:
       - "5555:5432"
@@ -20,18 +22,17 @@ services:
       POSTGRES_PASSWORD: fider_pw
 
   phppgadmin:
-    image: dockage/phppgadmin:latest
+    container_name: fider_adminer
+    image: adminer
     ports:
-      - "8765:80"
+      - "8765:8080"
     environment:
-      - PHP_PG_ADMIN_SERVER_PORT=5432
-      - PHP_PG_ADMIN_SERVER_HOST=pgdev
-      - PHP_PG_ADMIN_SERVER_DEFAULT_DB=fider
+      - ADMINER_DEFAULT_SERVER=pgdev
 
   openldap:
-    command: [--copy-service]
     image: osixia/openldap:1.4.0
-    container_name: openldap
+    container_name: fider_openldap
+    command: [--copy-service]
     tty: true
     stdin_open: true
     environment:

@@ -79,13 +79,13 @@ export default class ManageAuthenticationPage extends AdminBasePage<
     }
   };
 
-  private startLdapTest = async (provider: string) => {
+  private startLdapTest = async (provider: string, displayName: string) => {
     const result = await actions.testLdapServer(provider);
     if (result.ok)
     {
-      notify.success("Success ! LDAP is available !")
+      notify.success("Success ! "+displayName+" is a valid LDAP server.")
     } else {
-      notify.error("LDAP is not avaible. Please review configuration")
+      notify.error(displayName+" is not available. Please review LDAP configuration")
     }
   };
 
@@ -139,7 +139,7 @@ export default class ManageAuthenticationPage extends AdminBasePage<
                           Edit
                         </Button>
                          )}
-                        <Button onClick={this.startLdapTest.bind(this, o.provider)} size="mini" className="right">
+                        <Button onClick={this.startLdapTest.bind(this, o.provider, o.displayName)} size="mini" className="right">
                             <FaPlay />
                               Test
                         </Button>

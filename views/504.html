@@ -1,0 +1,15 @@
+{{define "server-data"}}{{end}}
+
+{{define "content"}}
+  <div class="container failure-page">
+    <img src="{{ .private.logo }}"/>
+    <h1>Gateway Timeout</h1>
+    <p>Fider didn't receive a timely response from another server.</p>
+
+    {{ if .public.tenant }}
+      <span>Take me back to <a href="{{ .public.settings.baseURL }}">{{ .public.settings.baseURL }}</a> home page.</span>
+    {{ end }}
+  </div>
+{{end}}
+
+{{define "end-of-body"}}{{end}}

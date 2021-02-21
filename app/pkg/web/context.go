@@ -214,6 +214,14 @@ func (c *Context) Unauthorized() error {
 	})
 }
 
+//GatewayTimeout returns a 504 page
+func (c *Context) GatewayTimeout() error {
+	return c.Render(http.StatusGatewayTimeout, "504.html", Props{
+		Title:       "Gateway Timeout",
+		Description: "Fider didn't receive a timely response from another server.",
+	})
+}
+
 //NotFound returns a 404 page
 func (c *Context) NotFound() error {
 	return c.Render(http.StatusNotFound, "404.html", Props{
@@ -255,6 +263,7 @@ func (c *Context) Failure(err error) error {
 	}); renderErr != nil {
 		return renderErr
 	}
+
 	return err
 }
 

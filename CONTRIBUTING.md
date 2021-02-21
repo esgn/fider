@@ -42,6 +42,9 @@ details. If you don't have an SMTP server, you can either sign up for a [Mailgun
 up for a [Mailtrap account](https://mailtrap.io), which is a free SMTP mocking server. If you prefer not to setup an email service, keep 
 an eye on the server logs. Sometimes it's necessary to navigate to some URLs that are only sent by email, but are also written to the logs.
 
+- **Import previous dump** : In case you have a previous dump to import, you can use the following command to do so  `cat dump.sql | docker exec -i fider_pgdev psql -U fider`.
+Migration scripts will be applied if needed by starting the application.
+
 #### 3. To start the application
 
 1. run `mage watch` to start the application on watch mode. The application will be reloaded every time a file is changed. Alternatively, it's also possible to start Fider by running `mage build` and `mage run`.

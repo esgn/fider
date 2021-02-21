@@ -1,6 +1,7 @@
 # ActiveDirectory/LDAP connector
 * Add email auth deactivation
 * Finish testing LDAP with different configurations
+* Add option to ignore ssl verify in case of ldaps
 
 # I18N
 * https://www.i18next.com/
