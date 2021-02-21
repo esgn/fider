@@ -152,7 +152,7 @@ type SignInByEmail struct {
 	VerificationKey string
 }
 
-//SignInWithLdap is the input model when user request to sign in by email
+//SignInWithLdap is the input model when user request to sign in by ldap
 type SignInWithLdap struct {
 	Username string `json:"username"`
 	Password string `json:"password"`

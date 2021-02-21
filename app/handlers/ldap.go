@@ -28,6 +28,10 @@ func SignInByLdap() web.HandlerFunc {
 		}
 
 		// Get user profile from LDAP server
+		// TODO : This should be an action if we stick to fider logic
+		// The actions should validate that the user exists in LDAP
+		// Then a second query should be emitted to get the LDAP profile
+		// It two queries instead of one though
 		ldapUser := &query.GetLdapProfile{Provider: provider, Username: input.Model.Username, Password: input.Model.Password}
 		if err := bus.Dispatch(c, ldapUser); err != nil {
 			// Final user password must no appear anywhere in the logs
@@ -60,12 +64,12 @@ func SignInByLdap() web.HandlerFunc {
 			// And than no user was found
 			if errors.Cause(err) == app.ErrNotFound {
 
-				// In case the fider instance is private we skip the process
+				// Yet in case the fider instance is private we exit the process
 				if c.Tenant().IsPrivate {
 					return c.Redirect("/not-invited")
 				}
 
-				// We create a new user with the provided provider
+				// Then we create a new user with the provided provider
 				user = &models.User{
 					Name:   ldapUser.Result.Name,
 					Tenant: c.Tenant(),
