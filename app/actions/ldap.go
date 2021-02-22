@@ -14,7 +14,7 @@ import (
 	"github.com/getfider/fider/app/pkg/validate"
 )
 
-// Verify if string is an integer
+// IsInteger verifies if string is an integer
 func IsInteger(s string) bool {
 	_, err := strconv.Atoi(s)
 	return err == nil
