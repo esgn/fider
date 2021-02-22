@@ -92,7 +92,7 @@ func routes(r *web.Engine) *web.Engine {
 	r.Get("/invite/verify", handlers.VerifySignInKey(enum.EmailVerificationKindUserInvitation))
 	r.Post("/_api/signin/complete", handlers.CompleteSignInProfile())
 	r.Post("/_api/signin", handlers.SignInByEmail())
-	r.Post("/_api/ldap/:provider", handlers.SignInByLdap())
+	r.Post("/_api/ldap/signin", handlers.SignInByLdap())
 
 	//Block if it's a locked tenant with a non-administrator user
 	r.Use(middlewares.BlockLockedTenants())

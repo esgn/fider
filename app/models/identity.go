@@ -156,6 +156,7 @@ type SignInByEmail struct {
 type SignInWithLdap struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	Provider string `json:"provider"`
 }
 
 //GetEmail returns the email being verified

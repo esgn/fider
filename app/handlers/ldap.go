@@ -9,44 +9,31 @@ import (
 	"github.com/getfider/fider/app/models/query"
 	"github.com/getfider/fider/app/pkg/bus"
 	"github.com/getfider/fider/app/pkg/errors"
-	"github.com/getfider/fider/app/pkg/validate"
 	"github.com/getfider/fider/app/pkg/web"
 	webutil "github.com/getfider/fider/app/pkg/web/util"
 )
 
-/* SignInByLdap allows user to sign in using a LDAP provider */
-
+//SignInByLdap allows user to sign in using a LDAP provider
 func SignInByLdap() web.HandlerFunc {
 	return func(c *web.Context) error {
 
-		provider := c.Param("provider")
-
-		// Input validation : Are username and password present in the query ?
+		// Input validation
+		// * Checks that username and password are provided
+		// * Checks that user exists in LDAP and its username/password are valid
 		input := new(actions.SignInWithLdap)
 		if result := c.BindTo(input); !result.Ok {
 			return c.HandleValidation(result)
 		}
 
-		// Get user profile from LDAP server
-		// TODO : This should be an action if we stick to fider logic
-		// The actions should validate that the user exists in LDAP
-		// Then a second query should be emitted to get the LDAP profile
-		// It two queries instead of one though
-		ldapUser := &query.GetLdapProfile{Provider: provider, Username: input.Model.Username, Password: input.Model.Password}
+		// Get user information from LDAP server
+		ldapUser := &query.GetLdapProfile{Provider: input.Model.Provider, Username: input.Model.Username}
 		if err := bus.Dispatch(c, ldapUser); err != nil {
-			// Final user password must no appear anywhere in the logs
-			c.Request.Body = "{\"username\":" + "\"" + input.Model.Username + "\"}"
-			// TODO : Do something cleaner here
-			e := validate.Error(err)
-			e.AddFieldFailure("ldapPassword", "USER UNKNOWN")
-			return c.BadRequest(web.Map{
-				"errors": e.Errors,
-			})
+			return c.Failure(err)
 		}
 
 		// Is the user already registered with the current LDAP provider ?
 		var user *models.User
-		userByProvider := &query.GetUserByProvider{Provider: provider, UID: ldapUser.Result.ID}
+		userByProvider := &query.GetUserByProvider{Provider: input.Model.Provider, UID: ldapUser.Result.ID}
 		err := bus.Dispatch(c, userByProvider)
 		user = userByProvider.Result
 
@@ -58,18 +45,18 @@ func SignInByLdap() web.HandlerFunc {
 			user = userByEmail.Result
 		}
 
-		// If the GetUserByEmail search has failed
+		// If the GetUserByEmail() search has failed
 		if err != nil {
 
-			// And than no user was found
+			// Because no user was found
 			if errors.Cause(err) == app.ErrNotFound {
 
-				// Yet in case the fider instance is private we exit the process
+				// By the way if the fider instance is private we exit the process
 				if c.Tenant().IsPrivate {
 					return c.Redirect("/not-invited")
 				}
 
-				// Then we create a new user with the provided provider
+				// Then we create a new user with the provider reference sent by the login form
 				user = &models.User{
 					Name:   ldapUser.Result.Name,
 					Tenant: c.Tenant(),
@@ -78,7 +65,7 @@ func SignInByLdap() web.HandlerFunc {
 					Providers: []*models.UserProvider{
 						&models.UserProvider{
 							UID:  ldapUser.Result.ID,
-							Name: provider,
+							Name: input.Model.Provider,
 						},
 					},
 				}
@@ -86,29 +73,30 @@ func SignInByLdap() web.HandlerFunc {
 				// And insert it into the database
 				if err = bus.Dispatch(c, &cmd.RegisterUser{User: user}); err != nil {
 					// Password must no appear anywhere in the logs
-					c.Request.Body = "{\"username\":" + "\"" + input.Model.Username + "\"}"
+					// c.Request.Body = "{\"username\":" + "\"" + input.Model.Username + "\"}"
 					return c.Failure(err)
 				}
 
 			}
 			// If no error was returned but the user is still missing a provider
-		} else if !user.HasProvider(provider) {
+		} else if !user.HasProvider(input.Model.Provider) {
 
+			// We add the new user to the current provider
 			if err = bus.Dispatch(c, &cmd.RegisterUserProvider{
 				UserID:       user.ID,
-				ProviderName: provider,
+				ProviderName: input.Model.Provider,
 				ProviderUID:  ldapUser.Result.ID,
 			}); err != nil {
 				// Password must no appear anywhere in the logs
-				c.Request.Body = "{\"username\":" + "\"" + input.Model.Username + "\"}"
+				//c.Request.Body = "{\"username\":" + "\"" + input.Model.Username + "\"}"
 				return c.Failure(err)
 			}
-
 		}
 
-		// Add auth cookie
+		// Add auth cookie if everything went fine
 		webutil.AddAuthUserCookie(c, user)
 
-		return c.Ok(web.Map{})
+		// Redirect POST request to GET home page using HTTP 303
+		return c.SeeOther("/")
 	}
 }

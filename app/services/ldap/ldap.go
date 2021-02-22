@@ -41,6 +41,7 @@ func (s Service) Enabled() bool {
 
 func (s Service) Init() {
 	bus.AddHandler(getLdapProfile)
+	bus.AddHandler(verifyLdapUser)
 	bus.AddHandler(listActiveLdapProviders)
 	bus.AddHandler(listAllLdapProviders)
 	bus.AddHandler(testLdapServer)
@@ -82,7 +83,6 @@ func testLdapServer(ctx context.Context, c *cmd.TestLdapServer) error {
 		log.Errorf(ctx, "Could not dial LDAP url : @{LdapURL}", dto.Props{"LdapURL": ldapURL})
 		return err
 	}
-	defer l.Close()
 
 	// Reconnect with ldap+TLS if necessary
 	if ldapConfig.Result.Protocol == enum.LDAPTLS {
@@ -100,12 +100,13 @@ func testLdapServer(ctx context.Context, c *cmd.TestLdapServer) error {
 		return err
 	}
 
+	defer l.Close()
+
 	return nil
 }
 
-/* getLdapProfile is the main method implementing LDAD authentication */
-
-func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
+/* */
+func verifyLdapUser(ctx context.Context, q *query.VerifyLdapUser) error {
 
 	// Get LDAP provider configuration from database
 	ldapConfig := &query.GetCustomLdapConfigByProvider{Provider: q.Provider}
@@ -129,7 +130,6 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 		log.Errorf(ctx, "Could not dial LDAP url : @{LdapURL}", dto.Props{"LdapURL": ldapURL})
 		return errors.New("Could not connect to LDAP")
 	}
-	defer l.Close()
 
 	// Reconnect with TLS
 	if ldapConfig.Result.Protocol == enum.LDAPTLS {
@@ -179,7 +179,49 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 		return err
 	}
 
-	// Rebind with read only user
+	q.Result = true
+
+	defer l.Close()
+
+	return nil
+}
+
+/* getLdapProfile is the main method implementing LDAD authentication */
+func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
+
+	// Get LDAP provider configuration from database
+	ldapConfig := &query.GetCustomLdapConfigByProvider{Provider: q.Provider}
+	err := bus.Dispatch(ctx, ldapConfig)
+	if err != nil {
+		log.Errorf(ctx, " Could not get LDAP provider information for @{Provider}", dto.Props{"Provider": q.Provider})
+		return err
+	}
+
+	// Get protocol from LDAP provider configuration
+	protocol := "ldap://"
+	if ldapConfig.Result.Protocol == enum.LDAPS {
+		protocol = "ldaps://"
+	}
+	ldapURL := protocol + ldapConfig.Result.LdapHostname + ":" + ldapConfig.Result.LdapPort
+
+	// Connect to LDAP with short timeout
+	// https://github.com/go-ldap/ldap/issues/310
+	l, err := ldap.DialURL(ldapURL, ldap.DialWithDialer(&net.Dialer{Timeout: defaultTimeout}))
+	if err != nil {
+		log.Errorf(ctx, "Could not dial LDAP url : @{LdapURL}", dto.Props{"LdapURL": ldapURL})
+		return errors.New("Could not connect to LDAP")
+	}
+
+	// Reconnect with TLS if necessary
+	if ldapConfig.Result.Protocol == enum.LDAPTLS {
+		err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
+		if err != nil {
+			log.Errorf(ctx, "Could not activate TLS for @{LdapURL}", dto.Props{"LdapURL": ldapURL})
+			return err
+		}
+	}
+
+	// Bind with read only user
 	err = l.Bind(ldapConfig.Result.BindUsername, ldapConfig.Result.BindPassword)
 	if err != nil {
 		log.Errorf(ctx, "Could not bind with @{Username} for @{LdapURL}", dto.Props{"Username": ldapConfig.Result.BindUsername, "LdapURL": ldapURL})
@@ -187,7 +229,8 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 	}
 
 	// Search for user id, name and email
-	searchRequest2 := ldap.NewSearchRequest(
+	var filter = "(&" + ldapConfig.Result.UserSearchFilter + "(" + ldapConfig.Result.UsernameLdapAttribute + "=" + q.Username + "))"
+	searchRequest := ldap.NewSearchRequest(
 		ldapConfig.Result.RootDN,
 		(ldapConfig.Result.Scope - 1), ldap.NeverDerefAliases, 0, 0, false,
 		filter,
@@ -195,24 +238,26 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 		nil,
 	)
 
-	sr2, err2 := l.Search(searchRequest2)
-	if err2 != nil {
+	sr, err := l.Search(searchRequest)
+	if err != nil {
 		log.Errorf(ctx, "Could not search ldap with @{Filter}", dto.Props{"Filter": filter})
 		return err
 	}
 
 	// Verify search results
-	if len(sr2.Entries) != 1 {
+	if len(sr.Entries) != 1 {
 		log.Errorf(ctx, "@{Length} user found with @{Filter}", dto.Props{"Length": sr.Entries, "Filter": filter})
 		return errors.New("User not found")
 	}
 
 	// Create user profile
 	profile := &dto.LdapUserProfile{
-		ID:    strings.TrimSpace(sr2.Entries[0].GetAttributeValue(ldapConfig.Result.UsernameLdapAttribute)),
-		Name:  strings.TrimSpace(sr2.Entries[0].GetAttributeValue(ldapConfig.Result.NameLdapAttribute)),
-		Email: strings.ToLower(sr2.Entries[0].GetAttributeValue(ldapConfig.Result.MailLdapAttribute)),
+		ID:    strings.TrimSpace(sr.Entries[0].GetAttributeValue(ldapConfig.Result.UsernameLdapAttribute)),
+		Name:  strings.TrimSpace(sr.Entries[0].GetAttributeValue(ldapConfig.Result.NameLdapAttribute)),
+		Email: strings.ToLower(sr.Entries[0].GetAttributeValue(ldapConfig.Result.MailLdapAttribute)),
 	}
+
+	defer l.Close()
 
 	q.Result = profile
 
