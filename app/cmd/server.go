@@ -14,7 +14,6 @@ import (
 	"github.com/getfider/fider/app/pkg/log"
 	"github.com/getfider/fider/app/pkg/web"
 
-	/* THIS IS HOW SERVICES ARE REGISTERED IN THE SERVER BUS */
 	_ "github.com/getfider/fider/app/services/billing"
 	_ "github.com/getfider/fider/app/services/blob/fs"
 	_ "github.com/getfider/fider/app/services/blob/s3"
@@ -22,11 +21,11 @@ import (
 	_ "github.com/getfider/fider/app/services/email/mailgun"
 	_ "github.com/getfider/fider/app/services/email/smtp"
 	_ "github.com/getfider/fider/app/services/httpclient"
+	_ "github.com/getfider/fider/app/services/ldap"
 	_ "github.com/getfider/fider/app/services/log/console"
 	_ "github.com/getfider/fider/app/services/log/sql"
 	_ "github.com/getfider/fider/app/services/oauth"
 	_ "github.com/getfider/fider/app/services/sqlstore/postgres"
-	_ "github.com/getfider/fider/app/services/ldap"
 )
 
 //RunServer starts the Fider Server
