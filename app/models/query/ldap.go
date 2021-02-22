@@ -22,14 +22,6 @@ type GetLdapProfile struct {
 	Result *dto.LdapUserProfile
 }
 
-type VerifyLdapUser struct {
-	Provider string
-	Username string
-	Password string
-
-	Result bool
-}
-
 type ListActiveLdapProviders struct {
 	Result []*dto.LdapProviderOption
 }

@@ -123,8 +123,8 @@ export default class ManageAuthenticationPage extends AdminBasePage<
         <Segment>
 
         <Heading
-          title="LDAP"
-          subtitle="You can use these section to add a LDAP connection for authenticating users"
+          title="LDAP Providers"
+          subtitle="You can use this section to add one or more LDAP connection to authenticate users"
           size="small"
         />
 

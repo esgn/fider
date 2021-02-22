@@ -9,6 +9,12 @@ type TestLdapServer struct {
 	Provider string
 }
 
+type VerifyLdapUser struct {
+	Provider string
+	Username string
+	Password string
+}
+
 type SaveCustomLdapConfig struct {
 	Config *models.CreateEditLdapConfig
 }

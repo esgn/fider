@@ -219,7 +219,7 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
           value={nameLdapAttribute}
           disabled={!fider.session.user.isAdministrator}
           onChange={setNameLdapAttribute}
-          placeholder="givenName"
+          placeholder="displayName"
         />
 
         <Input

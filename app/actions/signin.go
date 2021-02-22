@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/getfider/fider/app/models"
+	"github.com/getfider/fider/app/models/cmd"
 	"github.com/getfider/fider/app/models/enum"
 	"github.com/getfider/fider/app/models/query"
 	"github.com/getfider/fider/app/pkg/bus"
@@ -77,10 +78,10 @@ func (input *SignInWithLdap) Validate(ctx context.Context, user *models.User) *v
 		return result
 	}
 
-	verify := &query.VerifyLdapUser{Provider: input.Model.Provider, Username: input.Model.Username, Password: input.Model.Password}
+	verify := &cmd.VerifyLdapUser{Provider: input.Model.Provider, Username: input.Model.Username, Password: input.Model.Password}
 
-	if err := bus.Dispatch(ctx, verify); err != nil || !verify.Result {
-		result.AddFieldFailure("ldapPassword", "USER UNKNOWN")
+	if err := bus.Dispatch(ctx, verify); err != nil {
+		result.AddFieldFailure("ldapPassword", "LOGIN FAILED")
 	}
 
 	return result
