@@ -21,7 +21,7 @@ services:
       POSTGRES_USER: fider
       POSTGRES_PASSWORD: fider_pw
 
-  phppgadmin:
+  adminer:
     container_name: fider_adminer
     image: adminer
     ports:
