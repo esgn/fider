@@ -39,7 +39,7 @@ export default class SignInPage extends React.Component<any, {}> {
           <TenantLogo size={100} />
           {Fider.session.tenant.isPrivate ? messages.private() : messages.locked()}
         </div>
-        <SignInControl onEmailSent={this.onEmailSent} useEmail={true} redirectTo={Fider.settings.baseURL} />
+        <SignInControl onEmailSent={this.onEmailSent} useEmail={!Fider.settings.emailAuthDisabled} redirectTo={Fider.settings.baseURL} />
         <LegalNotice />
       </div>
     );

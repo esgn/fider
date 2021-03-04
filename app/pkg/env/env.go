@@ -56,10 +56,11 @@ type config struct {
 		}
 	}
 	Email struct {
-		NoReply   string `env:"EMAIL_NOREPLY,required"`
-		Whitelist string `env:"EMAIL_WHITELIST"`
-		Blacklist string `env:"EMAIL_BLACKLIST"`
-		Mailgun   struct {
+		AuthDisabled bool   `env:"EMAIL_AUTH_DISABLED,default=false"`
+		NoReply      string `env:"EMAIL_NOREPLY,required"`
+		Whitelist    string `env:"EMAIL_WHITELIST"`
+		Blacklist    string `env:"EMAIL_BLACKLIST"`
+		Mailgun      struct {
 			APIKey string `env:"EMAIL_MAILGUN_API"`
 			Domain string `env:"EMAIL_MAILGUN_DOMAIN"`
 			Region string `env:"EMAIL_MAILGUN_REGION,default=US"`

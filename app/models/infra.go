@@ -7,14 +7,15 @@ import (
 
 // SystemSettings is the system-wide settings
 type SystemSettings struct {
-	Mode            string
-	BuildTime       string
-	Version         string
-	Environment     string
-	GoogleAnalytics string
-	Compiler        string
-	Domain          string
-	HasLegal        bool
+	Mode              string
+	BuildTime         string
+	Version           string
+	Environment       string
+	GoogleAnalytics   string
+	Compiler          string
+	Domain            string
+	HasLegal          bool
+	EmailAuthDisabled bool
 }
 
 // Notification is the system generated notification entity

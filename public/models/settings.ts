@@ -29,6 +29,7 @@ export interface SystemSettings {
   globalAssetsURL: string;
   oauth: OAuthProviderOption[];
   ldap: LdapProviderOption[];
+  emailAuthDisabled: boolean;
 }
 
 export interface UserSettings {

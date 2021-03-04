@@ -26,14 +26,15 @@ var (
 
 func main() {
 	settings := &models.SystemSettings{
-		BuildTime:       buildtime,
-		Version:         version,
-		Compiler:        runtime.Version(),
-		Environment:     env.Config.Environment,
-		GoogleAnalytics: env.Config.GoogleAnalytics,
-		Mode:            env.Config.HostMode,
-		Domain:          env.MultiTenantDomain(),
-		HasLegal:        env.HasLegal(),
+		BuildTime:         buildtime,
+		Version:           version,
+		Compiler:          runtime.Version(),
+		Environment:       env.Config.Environment,
+		GoogleAnalytics:   env.Config.GoogleAnalytics,
+		Mode:              env.Config.HostMode,
+		Domain:            env.MultiTenantDomain(),
+		HasLegal:          env.HasLegal(),
+		EmailAuthDisabled: env.Config.Email.AuthDisabled,
 	}
 
 	args := os.Args[1:]
