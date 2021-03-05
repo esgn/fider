@@ -216,7 +216,27 @@ func TestRenderer_WithLdap(t *testing.T) {
 	renderer := web.NewRenderer(&models.SystemSettings{})
 	renderer.Render(buf, http.StatusOK, "index.html", web.Props{}, ctx)
 	compareRendererResponse(buf, "/app/pkg/web/testdata/ldap.html", ctx)
+}
 
+func TestRenderer_EmailAuthDisabled(t *testing.T) {
+	RegisterT(t)
+
+	bus.AddHandler(func(ctx context.Context, q *query.ListActiveOAuthProviders) error {
+		return nil
+	})
+
+	bus.AddHandler(func(ctx context.Context, q *query.ListActiveLdapProviders) error {
+		return nil
+	})
+
+	buf := new(bytes.Buffer)
+	ctx := newGetContext("https://demo.test.fider.io:3000/", nil)
+	renderer := web.NewRenderer(&models.SystemSettings{
+		EmailAuthDisabled: true,
+	})
+	renderer.Render(buf, http.StatusOK, "index.html", web.Props{}, ctx)
+
+	compareRendererResponse(buf, "/app/pkg/web/testdata/email.html", ctx)
 }
 
 func TestRenderer_NonOK(t *testing.T) {
