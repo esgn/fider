@@ -20,7 +20,7 @@ export const SignInControl: React.FunctionComponent<SignInControlProps> = props 
   const [password, setPassword] = useState("");
   const [error, setError] = useState<Failure | undefined>(undefined);
   const [ldapError, setLdapError] = useState<Failure | undefined>(undefined);
-  const [ldapProvider, setLdapProvider] = useState((ldapProvidersLen>0 && fider.settings.ldap[0].provider) || "");
+  const [ldapProvider, setLdapProvider] = useState((ldapProvidersLen > 0 && fider.settings.ldap[0].provider) || "");
 
   const signIn = async () => {
     const result = await actions.signIn(email);
@@ -36,12 +36,12 @@ export const SignInControl: React.FunctionComponent<SignInControlProps> = props 
   };
 
   const ldapSignIn = async () => {
-    const result = await actions.ldapSignIn(username,password,ldapProvider);
+    const result = await actions.ldapSignIn(username, password, ldapProvider);
     if (result.ok) {
       setUsername("");
       setPassword("");
       setLdapError(undefined);
-      location.href = "/";
+      location.reload();
     } else if (result.error) {
       setLdapError(result.error);
     }
@@ -67,41 +67,31 @@ export const SignInControl: React.FunctionComponent<SignInControlProps> = props 
     <div className="c-signin-control">
 
       {ldapProvidersLen > 0 && (
-          <div className="l-signin-ldap">
-                <p>Login with LDAP</p>
-            <Form error={ldapError}>
-              <Input field="ldapUsername"
-                            value={username}
-                            placeholder="LDAP username"
-                            onChange={setUsername}
-                            ></Input>
+        <div className="l-signin-ldap">
+          <p>Login with LDAP</p>
+          <Form error={ldapError}>
+            <Input field="ldapUsername" value={username} placeholder="LDAP username" onChange={setUsername} />
+            <Input field="ldapPassword" value={password} placeholder="LDAP password" onChange={setPassword} password />
 
-              <Input field="ldapPassword"
-                            value={password}
-                            placeholder="LDAP password"
-                            onChange={setPassword}
-                            password={true}
-                            ></Input>
-
-              <Field>
-                <span className="m-ldap-dropdown-label">LDAP Server</span>
-                <DropDown
-                    items={[
-                    ...fider.settings.ldap.map(x => ({ value: x.provider, label: x.displayName }))
-                    ]}
-                    defaultValue={ldapProvider}
-                    placeholder="Select a LDAP provider"
-                    onChange={updateLdapProvider}
-                    inline={true}
-                    className="m-ldap-dropdown-inline"
-                />
-              </Field>
-              <Button type="submit" color="positive" disabled={((username === "")||(password === ""))} onClick={ldapSignIn}>
-                  Sign in
-              </Button>
-            </Form>
-          </div>
-        )}
+            <Field>
+              <span className="m-ldap-dropdown-label">LDAP Server</span>
+              <DropDown
+                items={[
+                  ...fider.settings.ldap.map(x => ({ value: x.provider, label: x.displayName }))
+                ]}
+                defaultValue={ldapProvider}
+                placeholder="Select a LDAP provider"
+                onChange={updateLdapProvider}
+                inline={true}
+                className="m-ldap-dropdown-inline"
+              />
+            </Field>
+            <Button type="submit" color="positive" disabled={username === "" || password === ""} onClick={ldapSignIn}>
+              Sign in
+            </Button>
+          </Form>
+        </div>
+      )}
 
       {ldapProvidersLen > 0 && (props.useEmail || oauthProvidersLen > 0) && <div className="c-divider">OR</div>}
 

@@ -2,6 +2,7 @@ package actions
 
 import (
 	"context"
+	"github.com/getfider/fider/app/pkg/env"
 
 	"github.com/getfider/fider/app/models"
 	"github.com/getfider/fider/app/models/cmd"
@@ -31,6 +32,11 @@ func (input *SignInByEmail) IsAuthorized(ctx context.Context, user *models.User)
 // Validate if current model is valid
 func (input *SignInByEmail) Validate(ctx context.Context, user *models.User) *validate.Result {
 	result := validate.Success()
+
+	if env.Config.Email.AuthDisabled {
+		result.AddFieldFailure("email", "Email authentication is disabled.")
+		return result
+	}
 
 	if input.Model.Email == "" {
 		result.AddFieldFailure("email", "Email is required.")
