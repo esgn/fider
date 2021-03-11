@@ -119,7 +119,7 @@ func (input *CreateEditLdapConfig) Validate(ctx context.Context, user *models.Us
 	if input.Model.UsernameLdapAttribute == "" {
 		result.AddFieldFailure("usernameLdapAttribute", "Username LDAP attribute is required.")
 	} else if len(input.Model.UsernameLdapAttribute) > 100 {
-		result.AddFieldFailure("scope", "Username LDAP attribute must have less than 100 characters.")
+		result.AddFieldFailure("usernameLdapAttribute", "Username LDAP attribute must have less than 100 characters.")
 	}
 
 	if input.Model.NameLdapAttribute == "" {

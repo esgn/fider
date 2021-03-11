@@ -90,7 +90,7 @@ func getLdapConn(ctx context.Context, provider string) (*ldap.Conn, *models.Ldap
 
 	// Reconnect with ldap+TLS if necessary
 	if ldapConfig.Protocol == enum.LDAPTLS {
-		err = l.StartTLS(&tls.Config{InsecureSkipVerify: true})
+		err = l.StartTLS(&tls.Config{InsecureSkipVerify: !ldapConfig.CertCheck})
 		if err != nil {
 			log.Errorf(ctx, "Could not activate TLS for @{LdapURL}", dto.Props{"LdapURL": ldapURL})
 			return nil, ldapConfig, ldapURL, err

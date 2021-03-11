@@ -19,6 +19,7 @@ type dbLdapConfig struct {
 	DisplayName           string `db:"display_name"`
 	Status                int    `db:"status"`
 	Protocol              int    `db:"protocol"`
+	CertCheck             bool   `db:"cert_check"`
 	LdapHostname          string `db:"ldap_hostname"`
 	Port                  int    `db:"ldap_port"`
 	BindUsername          string `db:"bind_username"`
@@ -38,6 +39,7 @@ func (m *dbLdapConfig) toModel() *models.LdapConfig {
 		DisplayName:           m.DisplayName,
 		Status:                m.Status,
 		Protocol:              m.Protocol,
+		CertCheck:             m.CertCheck,
 		LdapHostname:          m.LdapHostname,
 		LdapPort:              strconv.Itoa(m.Port),
 		BindUsername:          m.BindUsername,
@@ -62,7 +64,8 @@ func getCustomLdapConfigByProvider(ctx context.Context, q *query.GetCustomLdapCo
 		SELECT id, provider, display_name, status,
 					ldap_hostname, ldap_port, 
 					bind_username, bind_password, root_dn,
-					scope, user_search_filter, username_ldap_attribute, name_ldap_attribute, mail_ldap_attribute, protocol
+					scope, user_search_filter, username_ldap_attribute, name_ldap_attribute,
+		       		mail_ldap_attribute, protocol, cert_check
 		FROM ldap_providers
 		WHERE tenant_id = $1 AND provider = $2
 		`, tenant.ID, q.Provider)
@@ -84,7 +87,7 @@ func listCustomLdapConfig(ctx context.Context, q *query.ListCustomLdapConfig) er
 			SELECT id, provider, display_name, status,
 						 ldap_hostname, ldap_port, 
 						 bind_username, bind_password, root_dn,
-						 scope, user_search_filter, username_ldap_attribute, protocol
+						 scope, user_search_filter, username_ldap_attribute, protocol, cert_check
 			FROM ldap_providers
 			WHERE tenant_id = $1
 			ORDER BY id`, tenant.ID)
@@ -110,29 +113,30 @@ func saveCustomLdapConfig(ctx context.Context, c *cmd.SaveCustomLdapConfig) erro
 				tenant_id, provider, display_name, status,
 				ldap_hostname, ldap_port, bind_username,
 				bind_password, root_dn, scope, user_search_filter,
-				username_ldap_attribute, name_ldap_attribute, mail_ldap_attribute, protocol
-			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+				username_ldap_attribute, name_ldap_attribute, mail_ldap_attribute, protocol, cert_check
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 			RETURNING id`
 
 			err = trx.Get(&c.Config.ID, query, tenant.ID, c.Config.Provider,
 				c.Config.DisplayName, c.Config.Status, c.Config.LdapHostname, c.Config.LdapPort,
 				c.Config.BindUsername, c.Config.BindPassword, c.Config.RootDN,
 				c.Config.Scope, c.Config.UserSearchFilter, c.Config.UsernameLdapAttribute,
-				c.Config.NameLdapAttribute, c.Config.MailLdapAttribute, c.Config.Protocol)
+				c.Config.NameLdapAttribute, c.Config.MailLdapAttribute, c.Config.Protocol, c.Config.CertCheck)
 
 		} else {
 			query := `
 				UPDATE ldap_providers 
 				SET display_name = $3, status = $4, ldap_hostname = $5, ldap_port = $6, 
 				bind_username = $7, bind_password = $8, root_dn = $9, scope = $10, 
-				user_search_filter = $11, username_ldap_attribute = $12, name_ldap_attribute = $13, mail_ldap_attribute = $14, protocol = $15
+				user_search_filter = $11, username_ldap_attribute = $12, name_ldap_attribute = $13,
+				mail_ldap_attribute = $14, protocol = $15, cert_check = $16
 			WHERE tenant_id = $1 AND id = $2`
 
 			_, err = trx.Execute(query, tenant.ID, c.Config.ID,
 				c.Config.DisplayName, c.Config.Status, c.Config.LdapHostname, c.Config.LdapPort,
 				c.Config.BindUsername, c.Config.BindPassword, c.Config.RootDN,
 				c.Config.Scope, c.Config.UserSearchFilter, c.Config.UsernameLdapAttribute,
-				c.Config.NameLdapAttribute, c.Config.MailLdapAttribute, c.Config.Protocol)
+				c.Config.NameLdapAttribute, c.Config.MailLdapAttribute, c.Config.Protocol, c.Config.CertCheck)
 		}
 
 		if err != nil {

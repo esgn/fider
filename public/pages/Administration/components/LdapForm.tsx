@@ -19,6 +19,7 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
   const [enabled, setEnabled] = useState((props.config && props.config.status === LdapConfigStatus.Enabled) || false);
   //const [ldapTLS, setLdapTLS] = useState((props.config && props.config.tls === LdapConfigStatus.Enabled) || false);
   const [protocol, setProtocol] = useState((props.config && props.config.protocol) || 1);
+  const [certCheck, setCertCheck] = useState(!props.config || props.config.certCheck);
   const [scope, setScope] = useState((props.config && props.config.scope) || 3);
 
   const [ldapHostname, setLdapHostname] = useState((props.config && props.config.ldapHostname) || "");
@@ -67,6 +68,7 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
       provider,
       status: enabled ? LdapConfigStatus.Enabled : LdapConfigStatus.Disabled,
       protocol,
+      certCheck,
       displayName,
       ldapHostname,
       ldapPort,
@@ -112,14 +114,25 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
         />
         <p className="info">The name that will be displayed in the login form</p>
 
-          <Field label="LDAP protocol">
-            <DropDown
-                defaultValue={protocol}
-                items={ldapProtocolItems}
-                onChange={updateProtocol}
-            />
+        <Field label="LDAP protocol">
+          <DropDown
+            defaultValue={protocol}
+            items={ldapProtocolItems}
+            onChange={updateProtocol}
+          />
         </Field>
         <p className="info">Changing protocol will update port value with default port</p>
+
+        {protocol === 2 /* LDAP + TLS */ && <Field label="Check certificate">
+          <Toggle active={certCheck} onToggle={setCertCheck} />
+          {certCheck ? <>
+            <span>Enabled</span>
+            <p className="info">Certificate <strong>will</strong> be checked.</p>
+          </> : <>
+            <span>Disabled</span>
+            <p className="info">Certificate <strong>won't</strong> be checked.</p>
+          </>}
+        </Field>}
 
         <Input
           field="ldapHostname"
@@ -166,9 +179,7 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
                   change
                 </span>
               </>
-            ) : (
-              undefined
-            )
+            ) : undefined
           }
           placeholder="readonly"
         />
@@ -184,12 +195,12 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
         />
         
         <Field label="Search scope">
-            <DropDown
-                defaultValue={scope}
-                //items={[{ value: 1, label: "ScopeBaseObject" },{ value: 2, label: "ScopeSingleLevel" },{value: 3, label:"ScopeWholeSubtree"}]}
-                items={ldapScopeItems}
-                onChange={updateScope}
-            />
+          <DropDown
+            defaultValue={scope}
+            //items={[{ value: 1, label: "ScopeBaseObject" },{ value: 2, label: "ScopeSingleLevel" },{value: 3, label:"ScopeWholeSubtree"}]}
+            items={ldapScopeItems}
+            onChange={updateScope}
+          />
         </Field>
 
         <Input
@@ -236,15 +247,17 @@ export const LdapForm: React.FC<LdapFormProps> = props => {
           <div className="col-sm-4">
             <Field label="Status">
               <Toggle active={enabled} onToggle={setEnabled} />
-              <span>{enabled ? "Enabled" : "Disabled"}</span>
-              {enabled && (
+              {enabled ? <>
+                <span>Enabled</span>
                 <p className="info">
                   This provider will be available for everyone to use during the sign in process. It is recommended that
                   you keep it disable and test it before enabling it. The Test button is available after saving this
                   configuration.
                 </p>
-              )}
-              {!enabled && <p className="info">Users won't be able to sign in with this Provider.</p>}
+              </> : <>
+                <span>Disabled</span>
+                <p className="info">Users won't be able to sign in with this Provider.</p>
+              </>}
             </Field>
           </div>
         </div>

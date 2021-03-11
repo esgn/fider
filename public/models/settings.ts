@@ -83,6 +83,7 @@ export interface LdapConfig {
   displayName: string;
   status: number;
   protocol: number;
+  certCheck: boolean;
   ldapHostname: string;
   ldapPort: string;
   bindUsername: string;

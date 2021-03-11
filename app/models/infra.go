@@ -94,6 +94,7 @@ type CreateEditLdapConfig struct {
 	DisplayName           string `json:"displayName"`
 	Status                int    `json:"status"`
 	Protocol              int    `json:"protocol"`
+	CertCheck             bool   `json:"certCheck"`
 	LdapHostname          string `json:"ldapHostname"`
 	LdapPort              string `json:"ldapPort"`
 	BindUsername          string `json:"bindUsername"`
@@ -113,6 +114,7 @@ type LdapConfig struct {
 	DisplayName           string
 	Status                int
 	Protocol              int
+	CertCheck             bool
 	LdapHostname          string
 	LdapPort              string
 	BindUsername          string
@@ -133,6 +135,7 @@ func (o LdapConfig) MarshalJSON() ([]byte, error) {
 		"displayName":           o.DisplayName,
 		"status":                o.Status,
 		"protocol":              o.Protocol,
+		"certCheck":             o.CertCheck,
 		"ldapHostname":          o.LdapHostname,
 		"ldapPort":              o.LdapPort,
 		"bindUsername":          o.BindUsername,
