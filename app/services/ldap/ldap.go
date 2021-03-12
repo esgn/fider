@@ -140,7 +140,7 @@ func verifyLdapUser(ctx context.Context, c *cmd.VerifyLdapUser) error {
 	var filter = "(&" + ldapConfig.UserSearchFilter + "(" + ldapConfig.UsernameLdapAttribute + "=" + c.Username + "))"
 	searchRequest := ldap.NewSearchRequest(
 		ldapConfig.RootDN,
-		(ldapConfig.Scope - 1), ldap.NeverDerefAliases, 0, 0, false,
+		ldapConfig.Scope-1, ldap.NeverDerefAliases, 0, 0, false,
 		filter,
 		[]string{"dn"},
 		nil,
@@ -194,7 +194,7 @@ func getLdapProfile(ctx context.Context, q *query.GetLdapProfile) error {
 	var filter = "(&" + ldapConfig.UserSearchFilter + "(" + ldapConfig.UsernameLdapAttribute + "=" + q.Username + "))"
 	searchRequest := ldap.NewSearchRequest(
 		ldapConfig.RootDN,
-		(ldapConfig.Scope - 1), ldap.NeverDerefAliases, 0, 0, false,
+		ldapConfig.Scope-1, ldap.NeverDerefAliases, 0, 0, false,
 		filter,
 		[]string{ldapConfig.MailLdapAttribute, ldapConfig.NameLdapAttribute, ldapConfig.UsernameLdapAttribute},
 		nil,

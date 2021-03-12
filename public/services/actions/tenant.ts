@@ -59,7 +59,7 @@ export const signIn = async (email: string): Promise<Result> => {
 /* LDAP AUTH */
 
 export const ldapSignIn = async (username: string, password: string, provider: string): Promise<Result> => {
-  return await http.post(`/_api/ldap/signin`, {
+  return await http.post("/_api/ldap/signin", {
     username,
     password,
     provider

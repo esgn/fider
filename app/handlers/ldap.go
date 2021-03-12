@@ -63,7 +63,7 @@ func SignInByLdap() web.HandlerFunc {
 					Email:  ldapUser.Result.Email,
 					Role:   enum.RoleVisitor,
 					Providers: []*models.UserProvider{
-						&models.UserProvider{
+						{
 							UID:  ldapUser.Result.ID,
 							Name: input.Model.Provider,
 						},
@@ -97,6 +97,6 @@ func SignInByLdap() web.HandlerFunc {
 		webutil.AddAuthUserCookie(c, user)
 
 		// Redirect POST request to GET home page using HTTP 303
-		return c.SeeOther("/")
+		return c.Ok(web.Map{})
 	}
 }
